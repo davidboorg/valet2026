@@ -164,7 +164,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.2}
               onDragEnd={handleDragEnd}
-              className="fixed top-0 right-0 bottom-0 z-50 w-[300px] max-w-[85vw] bg-[var(--bg-primary)] shadow-2xl flex flex-col"
+              className="fixed top-0 right-0 bottom-0 z-50 w-[300px] max-w-[85vw] bg-[var(--bg-primary)] border-l border-[var(--border)] flex flex-col"
               aria-label="Mobilnavigering"
             >
               {/* Header */}
@@ -174,7 +174,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
                 </span>
                 <motion.button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 -mr-2 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors rounded-full hover:bg-[var(--bg-secondary)]"
+                  className="p-2 -mr-2 text-[var(--text-secondary)] hover:opacity-70 transition-opacity"
                   aria-label="Stäng meny"
                   whileTap={{ scale: 0.95 }}
                 >
@@ -199,20 +199,20 @@ export function MobileNav({ className = '' }: MobileNavProps) {
                       <Link
                         href={item.href}
                         onClick={() => setIsOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                        className={`flex items-center gap-3 px-4 py-3 transition-opacity ${
                           isActive
-                            ? 'bg-[var(--accent)] text-white font-medium shadow-md'
+                            ? 'border-l-2 border-[var(--border-strong)] text-[var(--text-primary)] font-medium bg-[var(--bg-secondary)]'
                             : item.isHighlighted
-                              ? 'text-[var(--accent)] font-medium hover:bg-[var(--accent-subtle)]'
-                              : 'text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+                              ? 'text-[var(--text-primary)] font-medium hover:opacity-70'
+                              : 'text-[var(--text-primary)] hover:opacity-70'
                         }`}
                       >
-                        <span className={isActive ? 'text-white' : item.isHighlighted ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}>
+                        <span className={isActive ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}>
                           {item.icon}
                         </span>
                         {item.label}
                         {item.isHighlighted && !isActive && (
-                          <span className="ml-auto text-xs bg-[var(--accent)] text-white px-2 py-0.5 rounded-full">
+                          <span className="ml-auto text-xs border border-[var(--border-strong)] text-[var(--text-primary)] px-2 py-0.5">
                             Ny
                           </span>
                         )}
@@ -231,7 +231,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
               >
                 <div className="flex justify-around text-center">
                   <div>
-                    <p className="text-xl font-bold text-[var(--accent)]">127</p>
+                    <p className="text-xl font-bold text-[var(--text-primary)]">127</p>
                     <p className="text-xs text-[var(--text-secondary)]">Affischer</p>
                   </div>
                   <div>
@@ -250,7 +250,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
                 <Link
                   href="/"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-center gap-2 py-3 text-sm text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+                  className="flex items-center justify-center gap-2 py-3 text-sm text-[var(--text-secondary)] hover:opacity-70 transition-opacity"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -285,10 +285,10 @@ export function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
+              className={`flex flex-col items-center gap-1 px-4 py-2 transition-opacity ${
                 isActive
-                  ? 'text-[var(--accent)]'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'text-[var(--text-primary)]'
+                  : 'text-[var(--text-secondary)] hover:opacity-70'
               }`}
             >
               {item.icon}
@@ -298,10 +298,10 @@ export function MobileBottomNav() {
         })}
         <Link
           href="/utstallningar"
-          className={`flex flex-col items-center gap-1 px-4 py-2 transition-colors ${
+          className={`flex flex-col items-center gap-1 px-4 py-2 transition-opacity ${
             pathname.startsWith('/utstallningar')
-              ? 'text-[var(--accent)]'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              ? 'text-[var(--text-primary)]'
+              : 'text-[var(--text-secondary)] hover:opacity-70'
           }`}
         >
           {Icons.exhibitions}

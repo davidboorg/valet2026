@@ -57,12 +57,12 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`text-sm transition-colors ${
+                  className={`text-sm transition-opacity ${
                     isActive
-                      ? 'text-[var(--accent)] font-medium'
+                      ? 'text-[var(--text-primary)] font-medium border-b border-[var(--border-strong)] pb-0.5'
                       : item.isHighlighted
-                        ? 'text-[var(--accent)] hover:text-[var(--accent-hover)] font-medium'
-                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                        ? 'text-[var(--text-primary)] font-medium hover:opacity-70'
+                        : 'text-[var(--text-secondary)] hover:opacity-70'
                   }`}
                 >
                   {item.label}
