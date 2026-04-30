@@ -103,10 +103,10 @@ export function OrdExplorerClient({ words, parties, decades }: OrdExplorerClient
             {/* Color toggle */}
             <button
               onClick={() => setColorByParty(!colorByParty)}
-              className={`px-4 py-2 text-sm border transition-colors ${
+              className={`px-4 py-2 text-sm border transition-opacity ${
                 colorByParty
-                  ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
-                  : 'bg-transparent text-[var(--text-secondary)] border-[var(--border)] hover:border-[var(--border-strong)]'
+                  ? 'border-[var(--border-strong)] text-[var(--text-primary)] bg-[var(--bg-secondary)]'
+                  : 'border-[var(--border)] text-[var(--text-secondary)] hover:opacity-70'
               }`}
             >
               Färg per parti
@@ -116,7 +116,7 @@ export function OrdExplorerClient({ words, parties, decades }: OrdExplorerClient
             {hasFilters && (
               <button
                 onClick={clearFilters}
-                className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                className="px-4 py-2 text-sm text-[var(--text-secondary)] hover:opacity-70 transition-opacity"
               >
                 Rensa filter
               </button>
@@ -124,7 +124,7 @@ export function OrdExplorerClient({ words, parties, decades }: OrdExplorerClient
           </div>
 
           {/* Word count */}
-          <p className="text-sm text-[var(--text-secondary)]">
+          <p className="meta">
             Visar {filteredWords.length} av {words.length} ord
           </p>
         </div>
@@ -139,22 +139,22 @@ export function OrdExplorerClient({ words, parties, decades }: OrdExplorerClient
               className="mb-6 flex flex-wrap gap-2"
             >
               {filterDecade && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-[var(--accent-subtle)] text-[var(--accent)] text-sm">
+                <span className="inline-flex items-center gap-1 px-3 py-1 border border-[var(--border-strong)] text-[var(--text-primary)] text-sm">
                   {filterDecade}-talet
                   <button
                     onClick={() => setFilterDecade(null)}
-                    className="ml-1 hover:text-[var(--accent-hover)]"
+                    className="ml-1 hover:opacity-70"
                   >
                     ×
                   </button>
                 </span>
               )}
               {filterParty && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-[var(--accent-subtle)] text-[var(--accent)] text-sm">
+                <span className="inline-flex items-center gap-1 px-3 py-1 border border-[var(--border-strong)] text-[var(--text-primary)] text-sm">
                   {filterParty}
                   <button
                     onClick={() => setFilterParty(null)}
-                    className="ml-1 hover:text-[var(--accent-hover)]"
+                    className="ml-1 hover:opacity-70"
                   >
                     ×
                   </button>
@@ -174,14 +174,15 @@ export function OrdExplorerClient({ words, parties, decades }: OrdExplorerClient
           />
         ) : (
           <div className="py-24 text-center">
-            <p className="text-lg text-[var(--text-secondary)]">
+            <p className="meta">Ingen träff</p>
+            <p className="mt-4 editorial-quote text-[var(--text-secondary)] max-w-2xl mx-auto">
               Inga ord matchar de valda filtren.
             </p>
             <button
               onClick={clearFilters}
-              className="mt-4 text-[var(--accent)] hover:underline"
+              className="mt-8 text-sm border-b border-current pb-0.5 hover:opacity-70 transition-opacity"
             >
-              Visa alla ord
+              Visa alla ord →
             </button>
           </div>
         )}
@@ -204,18 +205,18 @@ export function OrdExplorerClient({ words, parties, decades }: OrdExplorerClient
         </AnimatePresence>
 
         {/* Explore more */}
-        <div className="mt-16 pt-8 border-t border-[var(--border)] flex flex-wrap justify-center gap-4">
+        <div className="mt-16 pt-8 border-t border-[var(--border)] flex flex-wrap justify-center gap-8">
           <Link
             href="/affischer"
-            className="px-6 py-3 bg-[var(--accent)] text-white font-medium hover:bg-[var(--accent-hover)] transition-colors"
+            className="inline-flex items-center text-lg border-b border-current pb-1 hover:opacity-70 transition-opacity"
           >
-            Utforska affischerna
+            Bläddra i samlingen →
           </Link>
           <Link
             href="/tidslinje"
-            className="px-6 py-3 border border-[var(--border)] text-[var(--text-primary)] font-medium hover:bg-[var(--bg-secondary)] transition-colors"
+            className="inline-flex items-center text-lg border-b border-current pb-1 hover:opacity-70 transition-opacity"
           >
-            Se tidslinjen
+            Följ tidslinjen →
           </Link>
         </div>
       </div>
