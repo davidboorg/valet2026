@@ -126,113 +126,89 @@ export default function PartierPage() {
 
   return (
     <div className="bg-[var(--bg-primary)] min-h-screen">
-      {/* Hero Header */}
-      <section className="pt-32 pb-20 relative overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
+      {/* Editorial hero */}
+      <section className="pt-40 pb-20 border-b border-[var(--border)]">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <div className="grid lg:grid-cols-12 gap-8 items-end">
+            <div className="lg:col-span-7">
+              <p className="meta">Utforska efter</p>
+              <h1 className="display mt-6 italic">Partier</h1>
+              <p className="lead mt-8 max-w-2xl">
+                Valaffischer från svenska politiska partier — från arbetarrörelsens
+                tidiga agitation till dagens etablerade partisystem.
+              </p>
+            </div>
+            <div className="lg:col-span-4 lg:col-start-9 hidden lg:flex flex-wrap gap-3 justify-end">
+              {activeParties.slice(0, 8).map((party) => (
+                <div
+                  key={party.slug}
+                  className="w-10 h-10 overflow-hidden border border-[var(--border)]"
+                >
+                  <Image
+                    src={party.logo}
+                    alt={party.name}
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
 
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 relative">
-          <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)] mb-4 font-medium">
-            Utforska efter
-          </p>
-          <h1 className="font-[family-name:var(--font-playfair)] text-5xl md:text-6xl lg:text-7xl font-bold text-[var(--text-primary)] mb-6">
-            Partier
-          </h1>
-          <p className="text-xl text-[var(--text-secondary)] max-w-2xl leading-relaxed">
-            Upptäck valaffischer från svenska politiska partier — från arbetarrörelsens
-            tidiga agitation till dagens etablerade partisystem.
-          </p>
-
-          {/* Party logo preview row */}
-          <div className="mt-12 flex flex-wrap gap-4">
-            {activeParties.slice(0, 8).map((party) => (
-              <div
-                key={party.slug}
-                className="w-12 h-12 rounded-full overflow-hidden shadow-lg transform hover:scale-110 transition-transform duration-300"
-              >
-                <Image
-                  src={party.logo}
-                  alt={party.name}
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
+          {/* Datatag-rad */}
+          <div className="data-tags mt-12">
+            <span>{activeParties.length} riksdagspartier</span>
+            <span>{historicalParties.length} historiska</span>
+            <span>1889–idag</span>
           </div>
         </div>
       </section>
 
       {/* Active parties grid */}
-      <section className="pb-20">
+      <section className="py-20">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
-          <div className="flex items-center gap-4 mb-10">
-            <h2 className="font-[family-name:var(--font-playfair)] text-3xl md:text-4xl font-bold text-[var(--text-primary)]">
-              Riksdagspartier
-            </h2>
-            <div className="h-px flex-1 bg-[var(--border)]" />
-          </div>
+          <p className="meta">Nuvarande</p>
+          <h2 className="h1 mt-4 italic">Riksdagspartier</h2>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
             {activeParties.map((party) => (
               <Link
                 key={party.slug}
                 href={`/partier/${party.slug}`}
-                className="group relative"
+                className="group block"
               >
-                <div className="relative bg-[var(--bg-secondary)] p-8 transition-all duration-300 group-hover:bg-[var(--bg-dark)] group-hover:shadow-2xl group-hover:-translate-y-2 overflow-hidden">
-                  {/* Color accent bar */}
-                  <div
-                    className="absolute top-0 left-0 w-full h-1 transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
-                    style={{ backgroundColor: party.color }}
-                  />
-
+                <div className="bg-[var(--bg-secondary)] p-6 border border-[var(--border)] hover:border-[var(--border-strong)] transition-opacity hover:opacity-80">
                   {/* Logo */}
-                  <div className="w-20 h-20 mb-6 mx-auto transform group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-16 h-16 mb-4 mx-auto">
                     <Image
                       src={party.logo}
                       alt={`${party.name} logotyp`}
-                      width={80}
-                      height={80}
-                      className="w-full h-full drop-shadow-lg"
+                      width={64}
+                      height={64}
+                      className="w-full h-full"
                     />
                   </div>
 
                   {/* Party name */}
-                  <h3 className="font-[family-name:var(--font-playfair)] text-xl font-bold text-[var(--text-primary)] group-hover:text-white text-center transition-colors duration-300">
-                    {party.name}
-                  </h3>
+                  <h3 className="h3 text-center">{party.name}</h3>
 
-                  {/* Abbreviation badge */}
+                  {/* Abbreviation */}
                   {party.abbreviation && (
-                    <div
-                      className="mx-auto mt-3 w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                      style={{ backgroundColor: party.color }}
-                    >
-                      {party.abbreviation}
-                    </div>
+                    <p className="meta text-center mt-2">{party.abbreviation}</p>
                   )}
 
                   {/* Founded year */}
-                  <p className="mt-4 text-sm text-[var(--text-secondary)] group-hover:text-gray-400 text-center transition-colors duration-300">
+                  <p className="caption text-center mt-3">
                     Grundat {party.foundedYear}
                   </p>
 
                   {/* Historical names */}
                   {party.historicalNames.length > 0 && (
-                    <p className="mt-3 text-xs text-[var(--text-secondary)] group-hover:text-gray-500 italic text-center transition-colors duration-300">
+                    <p className="caption italic text-center mt-2">
                       Tidigare: {party.historicalNames.slice(0, 2).join(', ')}
                     </p>
                   )}
-
-                  {/* Hover arrow */}
-                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </div>
                 </div>
               </Link>
             ))}
@@ -243,46 +219,40 @@ export default function PartierPage() {
       {/* Historical parties */}
       <section className="py-20 bg-[var(--bg-secondary)]">
         <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
-          <div className="flex items-center gap-4 mb-6">
-            <h2 className="font-[family-name:var(--font-playfair)] text-3xl md:text-4xl font-bold text-[var(--text-primary)]">
-              Historiska partier
-            </h2>
-            <div className="h-px flex-1 bg-[var(--border)]" />
-          </div>
-          <p className="text-[var(--text-secondary)] mb-10 max-w-2xl text-lg">
+          <p className="meta">Arkiv</p>
+          <h2 className="h1 mt-4 italic">Historiska partier</h2>
+          <p className="lead mt-6 max-w-2xl">
             Dessa partier existerar inte längre under samma namn, men deras affischer
             är viktiga tidsdokument från demokratins framväxt.
           </p>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
             {historicalParties.map((party) => (
               <Link
                 key={party.slug}
                 href={`/partier/${party.slug}`}
-                className="group"
+                className="group block"
               >
-                <div className="flex items-center gap-6 p-6 bg-[var(--bg-primary)] hover:bg-[var(--bg-warm)] transition-all duration-300 border border-[var(--border)] group-hover:border-[var(--accent)]">
+                <div className="flex items-center gap-6 p-6 bg-[var(--bg-primary)] border border-[var(--border)] hover:border-[var(--border-strong)] transition-opacity hover:opacity-80">
                   {/* Logo */}
-                  <div className="w-16 h-16 flex-shrink-0 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="w-14 h-14 flex-shrink-0">
                     <Image
                       src={party.logo}
                       alt={`${party.name} logotyp`}
-                      width={64}
-                      height={64}
-                      className="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-300"
+                      width={56}
+                      height={56}
+                      className="w-full h-full grayscale"
                     />
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-[family-name:var(--font-playfair)] text-lg font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors truncate">
-                        {party.name}
-                      </h3>
-                      <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">
+                      <h3 className="h3 truncate">{party.name}</h3>
+                      <span className="meta whitespace-nowrap">
                         {party.foundedYear}–
                       </span>
                     </div>
-                    <p className="text-sm text-[var(--text-secondary)] line-clamp-2">
+                    <p className="caption line-clamp-2">
                       {party.description}
                     </p>
                   </div>
@@ -293,20 +263,13 @@ export default function PartierPage() {
         </div>
       </section>
 
-      {/* Context section with visual flair */}
-      <section className="py-24 relative overflow-hidden">
-        {/* Large decorative text */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-bold text-[var(--bg-secondary)] select-none pointer-events-none whitespace-nowrap">
-          1921
-        </div>
-
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 relative">
+      {/* Context section — mörk CTA */}
+      <section className="section-fullbleed dark py-32">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 w-full">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7">
-              <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)] mb-6 font-medium">
-                Historisk kontext
-              </p>
-              <blockquote className="font-[family-name:var(--font-playfair)] text-3xl md:text-4xl italic text-[var(--text-primary)] leading-relaxed">
+              <p className="meta">Historisk kontext</p>
+              <blockquote className="editorial-quote mt-6 text-[var(--text-inverse)]">
                 &ldquo;Det svenska partisystemet formades under kampen för demokrati.
                 Affischerna visar hur partierna presenterade sig för väljare
                 som ofta för första gången fick göra sin röst hörd.&rdquo;
@@ -314,23 +277,18 @@ export default function PartierPage() {
             </div>
 
             <div className="lg:col-span-4 lg:col-start-9">
-              <div className="p-8 bg-[var(--bg-dark)] text-white">
-                <p className="text-xs uppercase tracking-[0.2em] text-[var(--accent)] mb-4 font-medium">
-                  Visste du att...
-                </p>
-                <p className="text-lg leading-relaxed text-gray-300">
+              <div className="p-8 border border-[rgba(255,255,255,0.2)]">
+                <p className="meta">Visste du att...</p>
+                <p className="body-text mt-4 text-[rgba(255,255,255,0.7)]">
                   1921 var första valet med allmän rösträtt. Partierna behövde
                   nu nå helt nya väljargrupper — arbetare, bönder, kvinnor —
                   och affischen blev det viktigaste mediet.
                 </p>
                 <Link
                   href="/tidslinje?year=1921"
-                  className="inline-flex items-center gap-2 mt-6 text-[var(--accent)] hover:text-white transition-colors"
+                  className="inline-flex items-center gap-2 mt-6 text-sm border-b border-current pb-0.5 hover:opacity-70 transition-opacity"
                 >
-                  Se affischer från 1921
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
+                  Se affischer från 1921 →
                 </Link>
               </div>
             </div>
