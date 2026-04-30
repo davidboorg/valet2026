@@ -3,16 +3,30 @@ import Link from 'next/link';
 export function Footer() {
   return (
     <footer className="bg-[var(--bg-dark)] text-[var(--text-inverse)]">
+      {/* Datatags-rad med källor */}
+      <div className="border-b border-[rgba(255,255,255,0.1)]">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 py-6">
+          <div className="data-tags text-[rgba(255,255,255,0.4)]">
+            <span>Kungliga biblioteket</span>
+            <span>Wikimedia Commons</span>
+            <span>Stockholmskällan</span>
+            <span>DigitaltMuseum</span>
+            <span>Affischerna 1967—1979</span>
+            <span>Partiarkiv</span>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-[1440px] mx-auto px-6 lg:px-12 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="md:col-span-2">
-            <Link href="/" className="inline-block">
-              <span className="font-[family-name:var(--font-playfair)] text-xl font-bold">
+            <Link href="/" className="inline-block hover:opacity-70 transition-opacity">
+              <span className="text-xl font-medium tracking-tight">
                 Valaffischen
               </span>
             </Link>
-            <p className="mt-4 text-sm text-[#9B9590] max-w-md leading-relaxed">
+            <p className="mt-4 text-sm text-[rgba(255,255,255,0.5)] max-w-md leading-relaxed">
               Ett digitalt arkiv över svenska valaffischer — från Kungliga bibliotekets
               samlingar och andra källor. Demokratins visuella historia, tillgängliggjord
               för forskning och bildning.
@@ -21,14 +35,14 @@ export function Footer() {
 
           {/* Navigation */}
           <div>
-            <h3 className="text-xs font-medium tracking-[0.15em] text-[#9B9590] uppercase mb-4">
+            <p className="meta text-[rgba(255,255,255,0.4)] mb-4">
               Utforska
-            </h3>
+            </p>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link
                   href="/affischer"
-                  className="text-[#9B9590] hover:text-[var(--text-inverse)] transition-colors"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
                 >
                   Samlingen
                 </Link>
@@ -36,7 +50,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/partier"
-                  className="text-[#9B9590] hover:text-[var(--text-inverse)] transition-colors"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
                 >
                   Partier
                 </Link>
@@ -44,7 +58,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/tidslinje"
-                  className="text-[#9B9590] hover:text-[var(--text-inverse)] transition-colors"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
                 >
                   Tidslinje
                 </Link>
@@ -52,7 +66,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/om"
-                  className="text-[#9B9590] hover:text-[var(--text-inverse)] transition-colors"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
                 >
                   Om projektet
                 </Link>
@@ -62,16 +76,16 @@ export function Footer() {
 
           {/* External + Rights */}
           <div>
-            <h3 className="text-xs font-medium tracking-[0.15em] text-[#9B9590] uppercase mb-4">
-              Källor & rättigheter
-            </h3>
+            <p className="meta text-[rgba(255,255,255,0.4)] mb-4">
+              Källor
+            </p>
             <ul className="space-y-3 text-sm">
               <li>
                 <a
                   href="https://digitalt.kb.se"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#9B9590] hover:text-[var(--text-inverse)] transition-colors inline-flex items-center gap-1"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity inline-flex items-center gap-1"
                 >
                   KB Digitalt
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,7 +96,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/om/rattigheter"
-                  className="text-[#9B9590] hover:text-[var(--text-inverse)] transition-colors"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
                 >
                   Rättighetsinformation
                 </Link>
@@ -91,42 +105,30 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Rights disclaimer - nuanced version */}
-        <div className="mt-16 pt-8 border-t border-[#2E2D2A]">
-          <div className="grid md:grid-cols-2 gap-6">
+        {/* Rights disclaimer - monokrom version */}
+        <div className="mt-16 pt-8 border-t border-[rgba(255,255,255,0.1)]">
+          <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h4 className="text-xs font-medium tracking-[0.15em] text-[#9B9590] uppercase mb-2">
+              <p className="meta text-[rgba(255,255,255,0.4)] mb-3">
                 Bildmaterial
-              </h4>
-              <div className="space-y-2 text-xs text-[#6B6560]">
-                <p className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#3D7A5F]" />
-                  <span>KB 1892–1951: Public Domain Mark 1.0</span>
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#B8860B]" />
-                  <span>Övrigt material: Upphovsrättsskyddat, visas med källhänvisning</span>
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#7C6955]" />
-                  <span>Citat: URL §23 för kritik och utbildning</span>
-                </p>
-              </div>
+              </p>
+              <p className="text-sm text-[rgba(255,255,255,0.5)] leading-relaxed">
+                Materialet är blandat licensierat. KB:s affischer 1892—1951 är Public Domain.
+                Modernare material visas med källhänvisning under citaträtt (URL §23).
+                Se varje affisch för specifik rättighetsstatus.
+              </p>
               <Link
                 href="/om/rattigheter"
-                className="inline-flex items-center gap-1 mt-3 text-xs text-[var(--accent)] hover:text-[#D4755A] transition-colors"
+                className="inline-flex items-center gap-1 mt-4 text-sm text-[rgba(255,255,255,0.7)] hover:opacity-70 transition-opacity border-b border-current pb-0.5"
               >
-                Läs mer om rättigheter
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                Läs mer om rättigheter →
               </Link>
             </div>
             <div className="md:text-right">
-              <p className="text-xs text-[#6B6560]">
+              <p className="text-sm text-[rgba(255,255,255,0.4)]">
                 Ett projekt för bildning — utan kommersiellt eller partipolitiskt syfte
               </p>
-              <p className="text-xs text-[#6B6560] mt-2">
+              <p className="text-sm text-[rgba(255,255,255,0.4)] mt-2">
                 © {new Date().getFullYear()} Valaffischen
               </p>
             </div>
