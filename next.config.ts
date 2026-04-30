@@ -63,6 +63,60 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'live.staticflickr.com',
       },
+      // Miljöpartiets officiella sajt
+      {
+        protocol: 'https',
+        hostname: 'www.mp.se',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mp.se',
+      },
+      // Liberalernas officiella sajt
+      {
+        protocol: 'https',
+        hostname: 'www.liberalerna.se',
+      },
+      {
+        protocol: 'https',
+        hostname: 'liberalerna.se',
+      },
+      // Centerpartiet
+      {
+        protocol: 'https',
+        hostname: 'www.centerpartiet.se',
+      },
+      {
+        protocol: 'https',
+        hostname: 'centerpartiet.se',
+      },
+      // Kristdemokraterna
+      {
+        protocol: 'https',
+        hostname: 'www.kristdemokraterna.se',
+      },
+      {
+        protocol: 'https',
+        hostname: 'kristdemokraterna.se',
+      },
+      // Vänsterpartiet
+      {
+        protocol: 'https',
+        hostname: 'www.vansterpartiet.se',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vansterpartiet.se',
+      },
+      // Socialdemokraterna
+      {
+        protocol: 'https',
+        hostname: 'www.socialdemokraterna.se',
+      },
+      {
+        protocol: 'https',
+        hostname: 'socialdemokraterna.se',
+      },
     ],
   },
 };
