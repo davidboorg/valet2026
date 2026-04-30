@@ -1,0 +1,288 @@
+@import "tailwindcss";
+
+/*
+ * Valaffischen — Monokrom palett
+ * Ren svart-vit. Inga färger någonstans i UI:t. Affischerna är all färg.
+ * Inspirerad av dataland.art-estetiken — fullbleed, lyssnande, redaktionell.
+ */
+:root {
+  /* Backgrounds — bara nyanser av svart-vit */
+  --bg-primary: #FFFFFF;     /* Helvit */
+  --bg-secondary: #F5F5F5;   /* Sektionsbakgrund — svag grå */
+  --bg-dark: #0A0A0A;        /* Nästan ren svart för mörka sektioner */
+  --bg-warm: #FAFAFA;        /* Hover-yta */
+
+  /* Text */
+  --text-primary: #0A0A0A;   /* Nästan ren svart */
+  --text-secondary: #666666; /* Metadata, captions */
+  --text-tertiary: #999999;  /* Ännu dämpad — för minimal-tags */
+  --text-inverse: #FFFFFF;
+
+  /* Borders */
+  --border: #E5E5E5;
+  --border-strong: #0A0A0A;
+
+  /* "Accent" — bara svart-vit-skiftningar.
+   * Det som tidigare var terrakotta är nu antingen svart (CTA) eller invers. */
+  --accent: #0A0A0A;
+  --accent-hover: #2A2A2A;
+  --accent-subtle: rgba(10, 10, 10, 0.05);
+
+  /* Rights-status — nu i gråskala, dämpat */
+  --status-free: #0A0A0A;
+  --status-restricted: #666666;
+  --status-warning: #0A0A0A;
+
+  /* Spacing */
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 48px;
+  --space-xl: 80px;
+  --space-2xl: 120px;
+
+  /* Typografisk skala — använd via klasser .h1 / .h2 / .h3 / .lead / .meta etc.
+   * Skalan är museal: stora rubriker, generös line-height, dämpad tracking. */
+  --type-display: clamp(3rem, 6.5vw, 5.5rem);   /* hero-överrubrik, 48-88px */
+  --type-h1:      clamp(2.25rem, 4vw, 3.5rem);  /* sidrubriker, 36-56px */
+  --type-h2:      clamp(1.75rem, 2.6vw, 2.5rem);/* sektioner, 28-40px */
+  --type-h3:      clamp(1.25rem, 1.6vw, 1.5rem);/* underrubriker, 20-24px */
+  --type-lead:    clamp(1.125rem, 1.3vw, 1.25rem);/* introtext, 18-20px */
+  --type-body:    1rem;                          /* brödtext, 16px */
+  --type-small:   0.875rem;                      /* metadata, 14px */
+  --type-meta:    0.75rem;                       /* labels, 12px */
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-serif: var(--font-playfair), 'EB Garamond', Georgia, serif;
+  --font-mono: var(--font-mono), 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+/* ============================================================
+ * Typografiska klasser — semantisk hierarki
+ * Använd <h1 className="display">..</h1>, <h2 className="h2">..</h2> osv.
+ * Kombinera gärna med italic för citatkänsla på rubriker.
+ * ============================================================ */
+.display {
+  font-family: var(--font-serif);
+  font-size: var(--type-display);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.018em;
+  color: var(--text-primary);
+}
+.h1 {
+  font-family: var(--font-serif);
+  font-size: var(--type-h1);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+  color: var(--text-primary);
+}
+.h2 {
+  font-family: var(--font-serif);
+  font-size: var(--type-h2);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.008em;
+  color: var(--text-primary);
+}
+.h3 {
+  font-family: var(--font-serif);
+  font-size: var(--type-h3);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text-primary);
+}
+.lead {
+  font-family: var(--font-sans);
+  font-size: var(--type-lead);
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.body-text {
+  font-family: var(--font-sans);
+  font-size: var(--type-body);
+  line-height: 1.65;
+  color: var(--text-primary);
+}
+.meta {
+  font-family: var(--font-sans);
+  font-size: var(--type-meta);
+  line-height: 1.4;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.caption {
+  font-family: var(--font-sans);
+  font-size: var(--type-small);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+/* Citat-stil för redaktionell text — italic serif som vid utställningskataloger */
+.editorial-quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  line-height: 1.35;
+  letter-spacing: -0.005em;
+  color: var(--text-primary);
+}
+
+/* ============================================================
+ * Dataland-stil: fullbleed, scroll-driven sektioner
+ * ============================================================ */
+.section-fullbleed {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.section-fullbleed.dark {
+  background: var(--bg-dark);
+  color: var(--text-inverse);
+}
+.section-fullbleed.dark .meta,
+.section-fullbleed.dark .caption {
+  color: rgba(255,255,255,0.6);
+}
+.section-fullbleed.dark .display,
+.section-fullbleed.dark .h1,
+.section-fullbleed.dark .h2,
+.section-fullbleed.dark .h3 {
+  color: var(--text-inverse);
+}
+
+/* Datatag-lista (likt dataland.art:s "AI • LNM • LLM"-rader) */
+.data-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+.data-tags > * { white-space: nowrap; }
+.section-fullbleed.dark .data-tags { color: rgba(255,255,255,0.5); }
+
+/* Scroll-progressindikator */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--text-primary);
+  z-index: 60;
+  transform-origin: left;
+}
+.section-fullbleed.dark ~ .scroll-progress { background: var(--text-inverse); }
+
+/* Base styles */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Typography utility classes */
+.font-heading {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+/* Custom scrollbar - warm tones */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Focus styles - terracotta accent */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling with reduced motion respect */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Utility classes for the design system */
+.bg-primary { background-color: var(--bg-primary); }
+.bg-secondary { background-color: var(--bg-secondary); }
+.bg-dark { background-color: var(--bg-dark); }
+.bg-warm { background-color: var(--bg-warm); }
+
+.text-accent { color: var(--accent); }
+.border-subtle { border-color: var(--border); }
+.border-strong { border-color: var(--border-strong); }
+
+/* Accent button */
+.btn-accent {
+  background-color: var(--accent);
+  color: var(--text-inverse);
+  transition: background-color 200ms ease-out;
+}
+
+.btn-accent:hover {
+  background-color: var(--accent-hover);
+}
+
+/* Card hover effect per spec */
+.card-hover {
+  transition: transform 200ms ease-out, border-color 200ms ease-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong);
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

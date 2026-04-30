@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 200" role="img" aria-label="Valaffischen — ett digitalt museum om alla valaffischer i Sveriges historia">
+  <!-- Ikon: affisch på käpp (centrerad horisontellt) -->
+  <g transform="translate(180, 0)">
+    <path d="M 12 6 L 48 6 L 48 60 L 41 67 L 12 67 Z" fill="currentColor"/>
+    <path d="M 48 60 L 41 67 L 48 67 Z" fill="var(--bg-primary, #FAF8F5)"/>
+    <line x1="48" y1="60" x2="41" y2="67" stroke="currentColor" stroke-width="0.6"/>
+    <rect x="29" y="67" width="1.5" height="22" fill="currentColor"/>
+  </g>
+
+  <!-- Wordmark: "Valaffischen" -->
+  <text x="210" y="130"
+        font-family="'IBM Plex Sans', system-ui, sans-serif"
+        font-size="46"
+        font-weight="500"
+        text-anchor="middle"
+        letter-spacing="-0.015em"
+        fill="currentColor">
+    Valaffischen
+  </text>
+
+  <!-- Tagline rad 1 -->
+  <text x="210" y="160"
+        font-family="'IBM Plex Sans', system-ui, sans-serif"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="0.16em"
+        text-anchor="middle"
+        fill="currentColor"
+        opacity="0.8">
+    ETT DIGITALT MUSEUM OM ALLA VALAFFISCHER
+  </text>
+
+  <!-- Tagline rad 2 med flankerande linjer -->
+  <line x1="100" y1="178" x2="155" y2="178" stroke="#C4654A" stroke-width="0.8"/>
+  <text x="210" y="181"
+        font-family="'IBM Plex Sans', system-ui, sans-serif"
+        font-size="9"
+        font-weight="500"
+        letter-spacing="0.18em"
+        text-anchor="middle"
+        fill="currentColor"
+        opacity="0.8">
+    I SVERIGES HISTORIA
+  </text>
+  <line x1="265" y1="178" x2="320" y2="178" stroke="#C4654A" stroke-width="0.8"/>
+</svg>

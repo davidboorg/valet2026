@@ -1,0 +1,19 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Socialdemokraterna: Red Rose -->
+  <circle cx="50" cy="50" r="48" fill="#E8112D"/>
+  <g fill="#fff">
+    <!-- Rose petals -->
+    <ellipse cx="50" cy="35" rx="12" ry="15" transform="rotate(-20 50 35)"/>
+    <ellipse cx="40" cy="42" rx="11" ry="14" transform="rotate(-50 40 42)"/>
+    <ellipse cx="60" cy="42" rx="11" ry="14" transform="rotate(50 60 42)"/>
+    <ellipse cx="45" cy="50" rx="10" ry="12" transform="rotate(-30 45 50)"/>
+    <ellipse cx="55" cy="50" rx="10" ry="12" transform="rotate(30 55 50)"/>
+    <!-- Center -->
+    <circle cx="50" cy="45" r="6"/>
+    <!-- Stem -->
+    <rect x="48" y="55" width="4" height="25" rx="2"/>
+    <!-- Leaves -->
+    <ellipse cx="42" cy="70" rx="8" ry="4" transform="rotate(-30 42 70)"/>
+    <ellipse cx="58" cy="72" rx="8" ry="4" transform="rotate(30 58 72)"/>
+  </g>
+</svg>

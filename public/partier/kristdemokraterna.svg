@@ -1,0 +1,18 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Kristdemokraterna: Cornflower / Blue cross shield -->
+  <circle cx="50" cy="50" r="48" fill="#000077"/>
+  <g fill="#fff">
+    <!-- Simplified cornflower -->
+    <ellipse cx="50" cy="30" rx="8" ry="15"/>
+    <ellipse cx="35" cy="40" rx="8" ry="12" transform="rotate(-40 35 40)"/>
+    <ellipse cx="65" cy="40" rx="8" ry="12" transform="rotate(40 65 40)"/>
+    <ellipse cx="30" cy="55" rx="7" ry="10" transform="rotate(-60 30 55)"/>
+    <ellipse cx="70" cy="55" rx="7" ry="10" transform="rotate(60 70 55)"/>
+    <ellipse cx="40" cy="60" rx="7" ry="11" transform="rotate(-20 40 60)"/>
+    <ellipse cx="60" cy="60" rx="7" ry="11" transform="rotate(20 60 60)"/>
+    <!-- Center -->
+    <circle cx="50" cy="48" r="10"/>
+    <!-- Stem -->
+    <rect x="48" y="58" width="4" height="22" rx="2"/>
+  </g>
+</svg>

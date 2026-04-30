@@ -1,0 +1,18 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bondeforbundet (historiskt): Wheat sheaf -->
+  <circle cx="50" cy="50" r="48" fill="#008000"/>
+  <g fill="#fff">
+    <!-- Wheat stalks -->
+    <rect x="48" y="55" width="4" height="30" rx="1"/>
+    <rect x="40" y="58" width="3" height="25" rx="1" transform="rotate(-15 41.5 70)"/>
+    <rect x="57" y="58" width="3" height="25" rx="1" transform="rotate(15 58.5 70)"/>
+    <!-- Wheat heads -->
+    <ellipse cx="50" cy="35" rx="5" ry="20"/>
+    <ellipse cx="42" cy="38" rx="4" ry="16" transform="rotate(-15 42 38)"/>
+    <ellipse cx="58" cy="38" rx="4" ry="16" transform="rotate(15 58 38)"/>
+    <!-- Grain details -->
+    <ellipse cx="50" cy="25" rx="3" ry="6"/>
+    <ellipse cx="50" cy="35" rx="3" ry="6"/>
+    <ellipse cx="50" cy="45" rx="3" ry="6"/>
+  </g>
+</svg>

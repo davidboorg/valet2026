@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 140" role="img" aria-label="Valaffischen — affisch på käpp">
+  <!-- Affischen: rektangel med vikt hörn (peeled corner) längst ned till höger -->
+  <path d="M 12 6 L 88 6 L 88 92 L 75 105 L 12 105 Z"
+        fill="currentColor"/>
+
+  <!-- Vikningens insida: vit triangel som signalerar att hörnet är uppvikt -->
+  <path d="M 88 92 L 75 105 L 88 105 Z"
+        fill="var(--bg-primary, #FAF8F5)"/>
+
+  <!-- Vikningens kant: tunn linje som ger djup -->
+  <line x1="88" y1="92" x2="75" y2="105"
+        stroke="currentColor" stroke-width="0.8"/>
+
+  <!-- Käppen som affischen sitter på — tunn vertikal pinne -->
+  <rect x="49" y="105" width="2" height="32" fill="currentColor"/>
+</svg>

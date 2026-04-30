@@ -1,0 +1,30 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Miljopartiet: Green dandelion -->
+  <circle cx="50" cy="50" r="48" fill="#83CF39"/>
+  <g fill="#fff">
+    <!-- Dandelion seeds radiating -->
+    <line x1="50" y1="45" x2="50" y2="20" stroke="#fff" stroke-width="2"/>
+    <line x1="50" y1="45" x2="30" y2="25" stroke="#fff" stroke-width="2"/>
+    <line x1="50" y1="45" x2="70" y2="25" stroke="#fff" stroke-width="2"/>
+    <line x1="50" y1="45" x2="25" y2="40" stroke="#fff" stroke-width="2"/>
+    <line x1="50" y1="45" x2="75" y2="40" stroke="#fff" stroke-width="2"/>
+    <line x1="50" y1="45" x2="22" y2="55" stroke="#fff" stroke-width="2"/>
+    <line x1="50" y1="45" x2="78" y2="55" stroke="#fff" stroke-width="2"/>
+    <line x1="50" y1="45" x2="35" y2="18" stroke="#fff" stroke-width="2"/>
+    <line x1="50" y1="45" x2="65" y2="18" stroke="#fff" stroke-width="2"/>
+    <!-- Seed heads -->
+    <circle cx="50" cy="20" r="4"/>
+    <circle cx="30" cy="25" r="3"/>
+    <circle cx="70" cy="25" r="3"/>
+    <circle cx="25" cy="40" r="3"/>
+    <circle cx="75" cy="40" r="3"/>
+    <circle cx="22" cy="55" r="3"/>
+    <circle cx="78" cy="55" r="3"/>
+    <circle cx="35" cy="18" r="3"/>
+    <circle cx="65" cy="18" r="3"/>
+    <!-- Center -->
+    <circle cx="50" cy="45" r="8"/>
+    <!-- Stem -->
+    <rect x="48" y="53" width="4" height="27" rx="2"/>
+  </g>
+</svg>
