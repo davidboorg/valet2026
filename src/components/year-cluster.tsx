@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Poster } from '@/lib/types';
+import { resolvePosterImage } from '@/lib/poster-image';
 
 interface ElectionContext {
   election_year: number;
@@ -103,21 +104,26 @@ export function YearCluster({
 
             {/* Poster thumbnails */}
             <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
-              {posters.slice(0, 12).map((poster) => (
-                <Link
-                  key={poster.id}
-                  href={`/affischer/${poster.id}`}
-                  className="group/poster relative aspect-[3/4] bg-[var(--bg-primary)] overflow-hidden"
-                >
-                  <Image
-                    src={poster.thumbnailUrl.replace('/200,/', '/300,/')}
-                    alt={poster.title}
-                    fill
-                    sizes="80px"
-                    className="object-contain group-hover/poster:scale-105 transition-transform"
-                  />
-                </Link>
-              ))}
+              {posters.slice(0, 12).map((poster) => {
+                const imageUrl = resolvePosterImage(poster);
+                return (
+                  <Link
+                    key={poster.id}
+                    href={`/affischer/${poster.id}`}
+                    className="group/poster relative aspect-[3/4] bg-[var(--bg-primary)] overflow-hidden"
+                  >
+                    {imageUrl && (
+                      <Image
+                        src={imageUrl.startsWith('/') ? imageUrl : imageUrl.replace('/200,/', '/300,/')}
+                        alt={poster.title}
+                        fill
+                        sizes="80px"
+                        className="object-contain group-hover/poster:scale-105 transition-transform"
+                      />
+                    )}
+                  </Link>
+                );
+              })}
 
               {/* "Show more" card if there are more posters */}
               {count > 12 && (

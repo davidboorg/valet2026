@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { searchPoliticalPosters, transformKBPoster } from '@/lib/kb-api';
 import type { Poster } from '@/lib/types';
+import { resolvePosterImage } from '@/lib/poster-image';
 
 // Exhibition data - same structure as in page.tsx
 // In production, this would come from Supabase
@@ -351,7 +352,9 @@ export default async function UtstallningPage({ params }: Props) {
               {/* Posters for this section */}
               {sectionPosters.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {sectionPosters.slice(0, 5).map((poster) => (
+                  {sectionPosters.slice(0, 5).map((poster) => {
+                    const imageUrl = resolvePosterImage(poster);
+                    return (
                     <Link
                       key={poster.id}
                       href={`/affischer/${poster.id}`}
@@ -362,13 +365,15 @@ export default async function UtstallningPage({ params }: Props) {
                           sectionIndex % 2 === 0 ? 'bg-[var(--bg-primary)]' : 'bg-[var(--bg-secondary)]'
                         }`}
                       >
+                        {imageUrl && (
                         <Image
-                          src={poster.thumbnailUrl.replace('/200,/', '/400,/')}
+                          src={imageUrl.startsWith('/') ? imageUrl : imageUrl.replace('/200,/', '/400,/')}
                           alt={poster.title}
                           fill
                           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                           className="object-contain"
                         />
+                        )}
                       </div>
                       <div className="mt-3">
                         <h3 className="text-sm font-medium text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent)] transition-colors">
@@ -379,7 +384,8 @@ export default async function UtstallningPage({ params }: Props) {
                         </p>
                       </div>
                     </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -396,26 +402,31 @@ export default async function UtstallningPage({ params }: Props) {
 
           {posters.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {posters.map((poster) => (
+              {posters.map((poster) => {
+                const imageUrl = resolvePosterImage(poster);
+                return (
                 <Link
                   key={poster.id}
                   href={`/affischer/${poster.id}`}
                   className="group"
                 >
                   <div className="relative aspect-[3/4] bg-[var(--bg-primary)]">
+                    {imageUrl && (
                     <Image
-                      src={poster.thumbnailUrl.replace('/200,/', '/300,/')}
+                      src={imageUrl.startsWith('/') ? imageUrl : imageUrl.replace('/200,/', '/300,/')}
                       alt={poster.title}
                       fill
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 16vw"
                       className="object-contain"
                     />
+                    )}
                   </div>
                   <p className="mt-2 text-xs text-[var(--text-secondary)] line-clamp-1 group-hover:text-[var(--text-primary)] transition-colors">
                     {poster.title}
                   </p>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-[var(--text-secondary)]">

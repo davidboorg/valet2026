@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Poster } from '@/lib/types';
+import { resolvePosterImage } from '@/lib/poster-image';
 import { RightsBadge } from './rights-badge';
 import { ToneBadge } from './rhetoric-overlay';
 
@@ -15,9 +16,14 @@ interface PosterCardProps {
 }
 
 export function PosterCard({ poster, priority = false, size = 'default', showRhetoric = false }: PosterCardProps) {
-  const imageUrl = size === 'large'
-    ? poster.thumbnailUrl.replace('/200,/', '/600,/')
-    : poster.thumbnailUrl.replace('/200,/', '/400,/');
+  const resolvedImage = resolvePosterImage(poster);
+  // Lokala bilder (startar med /) behöver ingen IIIF-transformation
+  // IIIF-URLs (innehåller /200,/) kan transformeras till större storlek
+  const imageUrl = resolvedImage.startsWith('/')
+    ? resolvedImage
+    : size === 'large'
+      ? resolvedImage.replace('/200,/', '/600,/')
+      : resolvedImage.replace('/200,/', '/400,/');
 
   return (
     <motion.article
@@ -37,7 +43,7 @@ export function PosterCard({ poster, priority = false, size = 'default', showRhe
           {/* Gradient overlay on hover */}
           <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-          {poster.thumbnailUrl ? (
+          {resolvedImage ? (
             <Image
               src={imageUrl}
               alt={poster.title}

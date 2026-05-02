@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { searchPoliticalPosters, transformKBPoster } from '@/lib/kb-api';
 import type { Poster } from '@/lib/types';
+import { resolvePosterImage } from '@/lib/poster-image';
 
 // Party data - same as in page.tsx
 // In production, this would come from Supabase
@@ -285,20 +286,24 @@ export default async function PartiPage({ params }: Props) {
 
           {posters.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-              {posters.slice(0, 15).map((poster) => (
+              {posters.slice(0, 15).map((poster) => {
+                const imageUrl = resolvePosterImage(poster);
+                return (
                 <Link
                   key={poster.id}
                   href={`/affischer/${poster.id}`}
                   className="group card-hover border border-transparent"
                 >
                   <div className="relative aspect-[3/4] bg-[var(--bg-primary)]">
+                    {imageUrl && (
                     <Image
-                      src={poster.thumbnailUrl.replace('/200,/', '/400,/')}
+                      src={imageUrl.startsWith('/') ? imageUrl : imageUrl.replace('/200,/', '/400,/')}
                       alt={poster.title}
                       fill
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       className="object-contain"
                     />
+                    )}
                   </div>
                   <div className="mt-3">
                     <h3 className="text-sm font-medium text-[var(--text-primary)] line-clamp-2 group-hover:text-[var(--accent)] transition-colors">
@@ -309,7 +314,8 @@ export default async function PartiPage({ params }: Props) {
                     </p>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-16">

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Poster } from '@/lib/types';
+import { resolvePosterImage } from '@/lib/poster-image';
 
 /**
  * Editorial story moment for scrollytelling
@@ -374,7 +375,9 @@ function StorySection({ moment, featuredPosters, isEven, onInView }: StorySectio
         >
           {featuredPosters.length > 0 ? (
             <div className="grid grid-cols-2 gap-4">
-              {featuredPosters.slice(0, 4).map((poster, idx) => (
+              {featuredPosters.slice(0, 4).map((poster, idx) => {
+                const imageUrl = resolvePosterImage(poster);
+                return (
                 <motion.div
                   key={poster.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -383,17 +386,20 @@ function StorySection({ moment, featuredPosters, isEven, onInView }: StorySectio
                   className="relative aspect-[3/4] bg-[var(--bg-secondary)] overflow-hidden group"
                 >
                   <Link href={`/affischer/${poster.id}`}>
+                    {imageUrl && (
                     <Image
-                      src={poster.thumbnailUrl.replace('/200,/', '/400,/')}
+                      src={imageUrl.startsWith('/') ? imageUrl : imageUrl.replace('/200,/', '/400,/')}
                       alt={poster.title}
                       fill
                       sizes="(max-width: 768px) 40vw, 200px"
                       className="object-contain group-hover:scale-105 transition-transform duration-500"
                     />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Link>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div

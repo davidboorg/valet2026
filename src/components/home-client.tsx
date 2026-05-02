@@ -2,18 +2,20 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MotionPlakat, MotionArkiv, MotionDatapunkter } from '@/components/motion-assets';
+import { MotionArkiv, MotionDatapunkter } from '@/components/motion-assets';
+import { KenBurnsHero } from '@/components/ken-burns-hero';
 import {
-  HeroScroll,
   StaggeredDataTags,
   FadeInSection,
   TypewriterText,
   ScrollLinkedMotion,
 } from '@/components/home-scroll-effects';
 import type { Poster } from '@/lib/types';
+import { resolvePosterImage } from '@/lib/poster-image';
 
 interface HomeClientProps {
   allPosters: Poster[];
+  heroPosters: Poster[];
   featured: Poster[];
   decades: number;
   partiesCount: number;
@@ -23,6 +25,7 @@ interface HomeClientProps {
 
 export function HomeClient({
   allPosters,
+  heroPosters,
   featured,
   decades,
   partiesCount,
@@ -50,22 +53,46 @@ export function HomeClient({
   return (
     <div className="bg-[var(--bg-primary)]">
       {/* ============================================================
-          01. EDITORIAL HERO — full skärmhöjd, scroll-pinned MotionPlakat
+          01. KEN BURNS HERO — affischerna ÄR videon.
+          Full-screen crossfade + slow zoom genom kuraterad sekvens av
+          ikoniska public-domain-affischer. Dataland-stil där materialet
+          självt är det centrala, inte UI:t.
           ============================================================ */}
-      <HeroScroll
-        motionAsset={<MotionPlakat className="text-[var(--text-primary)]" />}
-        dataTags={<StaggeredDataTags tags={heroDataTags} />}
-      >
-        <p className="meta">
-          {yearMin}—{yearMax} · Sverige
-        </p>
-        <h1 className="display mt-8 italic">Valaffischen</h1>
-        <p className="lead mt-10 max-w-2xl">
-          Ett digitalt museum för svenska valaffischer. {allPosters.length} dokument
-          över hur partierna har tävlat om din uppmärksamhet i mer än 130 år —
-          från Allmänna valmansförbundet till Sverigedemokraterna.
-        </p>
-      </HeroScroll>
+      <KenBurnsHero
+        posters={heroPosters}
+        yearMin={yearMin}
+        yearMax={yearMax}
+        totalCount={allPosters.length}
+      />
+
+      {/* ============================================================
+          01b. INTRO under hero — kontextualisera vad man precis sett
+          ============================================================ */}
+      <section className="py-32 border-b border-[var(--border)]">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <FadeInSection>
+            <div className="grid lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-5">
+                <p className="meta">{yearMin}—{yearMax} · Sverige</p>
+              </div>
+              <div className="lg:col-span-7">
+                <p className="editorial-quote">
+                  Innan radio. Före TV. Långt före sociala medier. Affischen var
+                  det enda mediet som fanns mellan partiet och väljaren.
+                </p>
+                <p className="lead mt-10">
+                  {allPosters.length} dokument över hur svenska partier har tävlat om
+                  din uppmärksamhet i mer än 130 år. Från Allmänna valmansförbundet
+                  och Sveriges socialdemokratiska arbetareparti till Sverigedemokraterna
+                  och Miljöpartiet de gröna.
+                </p>
+              </div>
+            </div>
+
+            <StaggeredDataTags tags={heroDataTags} className="mt-16" />
+          </FadeInSection>
+        </div>
+      </section>
 
       {/* ============================================================
           02. FEATURED — affischerna talar, UI tystar
@@ -98,9 +125,9 @@ export function HomeClient({
                   className={`group block ${i === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
                 >
                   <div className="relative bg-[var(--bg-secondary)] aspect-[3/4] overflow-hidden">
-                    {(poster.thumbnailUrl || poster.imageUrl) && (
+                    {resolvePosterImage(poster) && (
                       <Image
-                        src={(poster.thumbnailUrl || poster.imageUrl) as string}
+                        src={resolvePosterImage(poster)}
                         alt={poster.title}
                         fill
                         sizes={

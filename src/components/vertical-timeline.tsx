@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import type { Poster } from '@/lib/types';
+import { resolvePosterImage } from '@/lib/poster-image';
 
 interface Party {
   slug: string | null;
@@ -222,16 +223,18 @@ export function VerticalTimeline({
                       {/* Posters - horizontal scroll on mobile, grid on desktop */}
                       <div className="relative">
                         <div className="flex gap-4 overflow-x-auto pb-4 sm:grid sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 sm:overflow-visible scrollbar-hide">
-                          {yearPosters.map((poster) => (
+                          {yearPosters.map((poster) => {
+                            const imageUrl = resolvePosterImage(poster);
+                            return (
                             <Link
                               key={poster.id}
                               href={`/affischer/${poster.id}`}
                               className="group flex-shrink-0 w-[140px] sm:w-auto"
                             >
                               <div className="relative aspect-[3/4] bg-[var(--bg-secondary)] overflow-hidden">
-                                {poster.thumbnailUrl && (
+                                {imageUrl && (
                                   <Image
-                                    src={poster.thumbnailUrl.replace('/200,/', '/400,/')}
+                                    src={imageUrl.startsWith('/') ? imageUrl : imageUrl.replace('/200,/', '/400,/')}
                                     alt={poster.title}
                                     fill
                                     sizes="(max-width: 640px) 140px, (max-width: 1024px) 20vw, 12vw"
@@ -255,7 +258,8 @@ export function VerticalTimeline({
                                 </span>
                               )}
                             </Link>
-                          ))}
+                          );
+                          })}
                         </div>
                       </div>
                     </div>

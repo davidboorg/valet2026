@@ -5,6 +5,7 @@ import { useRef, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Poster } from '@/lib/types';
+import { resolvePosterImage } from '@/lib/poster-image';
 
 interface AnimatedHeroProps {
   posters: Poster[];
@@ -44,7 +45,10 @@ export function AnimatedHero({ posters }: AnimatedHeroProps) {
   if (!poster) return null;
 
   // Get high-res image URL
-  const imageUrl = poster.thumbnailUrl.replace('/200,/', '/1200,/');
+  const resolvedImage = resolvePosterImage(poster);
+  const imageUrl = resolvedImage.startsWith('/')
+    ? resolvedImage
+    : resolvedImage.replace('/200,/', '/1200,/');
 
   return (
     <section
@@ -195,7 +199,7 @@ export function AnimatedHero({ posters }: AnimatedHeroProps) {
                 >
                   <div className="relative aspect-[3/4] overflow-hidden">
                     <Image
-                      src={poster.thumbnailUrl.replace('/200,/', '/600,/')}
+                      src={resolvedImage.startsWith('/') ? resolvedImage : resolvedImage.replace('/200,/', '/600,/')}
                       alt={poster.title}
                       fill
                       sizes="400px"
