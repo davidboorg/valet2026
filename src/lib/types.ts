@@ -143,6 +143,10 @@ export interface Poster {
   imageUrl?: string;          // Direct image URL for non-IIIF sources
   highResUrl?: string;        // High-res version if available
 
+  // Supabase Storage fields
+  storagePublicUrl?: string;  // URL from Supabase Storage (prioritized)
+  uploadStatus?: 'pending' | 'uploading' | 'uploaded' | 'failed' | 'missing_source' | 'skipped';
+
   // Analysis fields (from poster_curation)
   transcribedText?: string;
   themes?: string[];
@@ -179,6 +183,11 @@ export interface VElectionPoster {
   high_res_url?: string;
   iiif_image_base_url?: string;
   kb_digitalt_id?: string;
+  // Supabase Storage fields
+  storage_path?: string;
+  storage_public_url?: string;
+  upload_status?: 'pending' | 'uploading' | 'uploaded' | 'failed' | 'missing_source' | 'skipped';
+  // Curation fields
   party?: string;
   election_year?: number;
   themes?: string[];

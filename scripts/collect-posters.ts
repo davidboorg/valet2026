@@ -1,36 +1,59 @@
-#!/usr/bin/env npx ts-node
+#!/usr/bin/env npx tsx
 /**
  * Valaffischmuseet — Poster Collection Script
  *
  * Systematically searches for Swedish election posters from multiple sources:
  * 1. Wikimedia Commons category API
  * 2. Swedish Wikipedia election pages
- * 3. Stockholmskällan
- * 4. Affischerna.se
- * 5. DigitaltMuseum
  *
  * Usage:
- *   npx ts-node scripts/collect-posters.ts --party "Socialdemokraterna" --year 1932
- *   npx ts-node scripts/collect-posters.ts --scan-all
- *   npx ts-node scripts/collect-posters.ts --verify data/poster-candidates.json
+ *   npx tsx scripts/collect-posters.ts --party "Socialdemokraterna" --year 1932
+ *   npx tsx scripts/collect-posters.ts --scan-all
+ *   npx tsx scripts/collect-posters.ts --scan-all --modern    # 1988-2022 endast
+ *   npx tsx scripts/collect-posters.ts --verify
+ *   npx tsx scripts/collect-posters.ts --import-to-db         # importera till Supabase
+ *   npx tsx scripts/collect-posters.ts --dry-run --import-to-db
+ *
+ * Miljövariabler:
+ *   NEXT_PUBLIC_SUPABASE_URL
+ *   SUPABASE_SERVICE_ROLE_KEY
  */
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as crypto from 'crypto';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+// --- CLI Args ---
+const args = process.argv.slice(2);
+const scanAll = args.includes('--scan-all');
+const modernOnly = args.includes('--modern');
+const verifyMode = args.includes('--verify');
+const importToDb = args.includes('--import-to-db');
+const dryRun = args.includes('--dry-run');
+const partyArg = args.includes('--party') ? args[args.indexOf('--party') + 1] : null;
+const yearArg = args.includes('--year') ? parseInt(args[args.indexOf('--year') + 1], 10) : null;
+
+// --- Config ---
+const USER_AGENT = 'ValaffischmuseetBot/1.0 (kontakt: david@surpriseventures.io; https://valaffischer.se)';
+const ROOT = path.resolve(__dirname, '..');
+const OUTPUT_PATH = path.join(ROOT, 'data', 'poster-candidates.json');
 
 // Types
 interface PosterCandidate {
+  id?: string;
   party: string;
   year: number;
   title: string;
   slogan?: string;
   image_url: string;
   thumbnail_url?: string;
-  source: 'wikimedia' | 'affischerna' | 'stockholmskallan' | 'dimu' | 'media_archive';
+  source: 'wikimedia' | 'affischerna' | 'stockholmskallan' | 'dimu' | 'media_archive' | 'kb';
   source_url: string;
   rights_status: 'free' | 'fair_use' | 'restricted' | 'unknown';
   verified: boolean;
   verification_notes?: string;
+  wikimedia_pageid?: number;
 }
 
 // Election years (riksdagsval)
@@ -41,47 +64,68 @@ const ELECTION_YEARS = [
   2018, 2022
 ];
 
+// Modern elections (prioriterat av användaren)
+const MODERN_YEARS = [1988, 1991, 1994, 1998, 2002, 2006, 2010, 2014, 2018, 2022];
+
+// Ytterligare Wikimedia Commons-kategorier för svenska valaffischer
+const ADDITIONAL_CATEGORIES = [
+  'Swedish_election_posters',
+  'Election_posters_in_Sweden',
+  'Political_posters_of_Sweden',
+  'Swedish_political_posters',
+  'Valaffischer',
+  'Swedish_election_campaign_material'
+];
+
 // Parties to track
-const PARTIES = {
+const PARTIES: Record<string, { aliases: string[]; wikimedia_category: string; founded: number; keywords: string[] }> = {
   'Socialdemokraterna': {
-    aliases: ['SAP', 'Socialdemokratiska arbetarepartiet', 'Sveriges socialdemokratiska arbetareparti'],
+    aliases: ['SAP', 'Socialdemokratiska arbetarepartiet', 'Sveriges socialdemokratiska arbetareparti', 'S', 'Sossarna'],
     wikimedia_category: 'Election_posters_of_the_Social_Democratic_Party_(Sweden)',
-    founded: 1889
+    founded: 1889,
+    keywords: ['socialdemokrat', 'sap', 'arbetareparti', 'branting', 'palme', 'löfven', 'andersson', 'persson', 'carlsson']
   },
   'Moderaterna': {
-    aliases: ['Högerpartiet', 'Allmänna valmansförbundet', 'AVF', 'Högern'],
+    aliases: ['Högerpartiet', 'Allmänna valmansförbundet', 'AVF', 'Högern', 'M'],
     wikimedia_category: 'Election_posters_of_the_Moderate_Party_(Sweden)',
-    founded: 1904
+    founded: 1904,
+    keywords: ['moderat', 'höger', 'bildt', 'reinfeldt', 'kristersson', 'borg']
   },
   'Centerpartiet': {
-    aliases: ['Bondeförbundet', 'Centern'],
+    aliases: ['Bondeförbundet', 'Centern', 'C'],
     wikimedia_category: 'Election_posters_of_the_Centre_Party_(Sweden)',
-    founded: 1913
+    founded: 1913,
+    keywords: ['center', 'bonde', 'fälldin', 'lööf', 'johansson', 'olsson']
   },
   'Liberalerna': {
-    aliases: ['Folkpartiet', 'FP', 'Frisinnade'],
+    aliases: ['Folkpartiet', 'FP', 'Frisinnade', 'L', 'Folkpartiet liberalerna'],
     wikimedia_category: 'Election_posters_of_the_Liberal_Party_(Sweden)',
-    founded: 1902
+    founded: 1902,
+    keywords: ['liberal', 'folkparti', 'frisinn', 'sabuni', 'björklund', 'pehrson']
   },
   'Vänsterpartiet': {
-    aliases: ['VPK', 'SKP', 'Kommunistpartiet', 'Vänsterpartiet Kommunisterna'],
+    aliases: ['VPK', 'SKP', 'Kommunistpartiet', 'Vänsterpartiet Kommunisterna', 'V'],
     wikimedia_category: 'Election_posters_of_the_Left_Party_(Sweden)',
-    founded: 1917
+    founded: 1917,
+    keywords: ['vänster', 'kommunist', 'vpk', 'skp', 'ohly', 'sjöstedt', 'dadgostar']
   },
   'Miljöpartiet': {
-    aliases: ['MP', 'Miljöpartiet de gröna'],
+    aliases: ['MP', 'Miljöpartiet de gröna', 'Gröna'],
     wikimedia_category: 'Election_posters_of_the_Green_Party_(Sweden)',
-    founded: 1981
+    founded: 1981,
+    keywords: ['miljö', 'grön', 'romson', 'fridolin', 'bolund', 'stenevi']
   },
   'Kristdemokraterna': {
     aliases: ['KD', 'KDS', 'Kristen demokratisk samling'],
     wikimedia_category: 'Election_posters_of_the_Christian_Democrats_(Sweden)',
-    founded: 1964
+    founded: 1964,
+    keywords: ['kristdemokrat', 'kd', 'kds', 'hägglund', 'busch']
   },
   'Sverigedemokraterna': {
     aliases: ['SD'],
     wikimedia_category: 'Election_posters_of_the_Sweden_Democrats',
-    founded: 1988
+    founded: 1988,
+    keywords: ['sverigedemokrat', 'sd', 'åkesson']
   }
 };
 
@@ -89,69 +133,178 @@ const PARTIES = {
 const WIKIMEDIA_API = 'https://commons.wikimedia.org/w/api.php';
 const WIKIPEDIA_API = 'https://sv.wikipedia.org/w/api.php';
 
+// --- Supabase setup (lazy init) ---
+let supabase: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (!supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Saknar NEXT_PUBLIC_SUPABASE_URL eller SUPABASE_SERVICE_ROLE_KEY');
+    }
+    supabase = createClient(supabaseUrl, supabaseKey);
+  }
+  return supabase;
+}
+
+// --- Helpers ---
+async function fetchWithUserAgent(url: string | URL, options: RequestInit = {}): Promise<Response> {
+  return fetch(url.toString(), {
+    ...options,
+    headers: {
+      'User-Agent': USER_AGENT,
+      Accept: 'application/json',
+      ...options.headers,
+    },
+  });
+}
+
+function detectPartyFromText(text: string): string {
+  const lowerText = text.toLowerCase();
+  for (const [party, config] of Object.entries(PARTIES)) {
+    // Check keywords
+    for (const keyword of config.keywords) {
+      if (lowerText.includes(keyword)) return party;
+    }
+    // Check aliases
+    for (const alias of config.aliases) {
+      if (lowerText.includes(alias.toLowerCase())) return party;
+    }
+  }
+  return 'unknown';
+}
+
+function extractYearFromText(text: string): number {
+  // Look for 4-digit years in election year range
+  const matches = text.match(/\b(19\d{2}|20[0-2]\d)\b/g);
+  if (matches) {
+    for (const match of matches) {
+      const year = parseInt(match, 10);
+      // Check if it's a plausible election year (within 2 years of actual)
+      if (ELECTION_YEARS.some(y => Math.abs(y - year) <= 2)) {
+        // Return the closest actual election year
+        return ELECTION_YEARS.reduce((prev, curr) =>
+          Math.abs(curr - year) < Math.abs(prev - year) ? curr : prev
+        );
+      }
+    }
+    // Return first found year even if not election year
+    return parseInt(matches[0], 10);
+  }
+  return 0;
+}
+
+function generateCandidateId(candidate: PosterCandidate): string {
+  // Generate a deterministic UUID v5-style from source_url
+  // Using a namespace UUID and the source_url as the name
+  const namespace = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // URL namespace UUID
+  const name = candidate.source_url || candidate.image_url || candidate.title;
+
+  // Create a hash and format as UUID
+  const hash = crypto.createHash('sha1').update(namespace + name).digest('hex');
+  return [
+    hash.substring(0, 8),
+    hash.substring(8, 12),
+    '5' + hash.substring(13, 16), // Version 5
+    ((parseInt(hash.substring(16, 18), 16) & 0x3f) | 0x80).toString(16).padStart(2, '0') + hash.substring(18, 20),
+    hash.substring(20, 32),
+  ].join('-');
+}
+
 /**
  * Search Wikimedia Commons for election posters
  */
-async function searchWikimediaCategory(category: string): Promise<PosterCandidate[]> {
+async function searchWikimediaCategory(category: string, partyHint?: string): Promise<PosterCandidate[]> {
   const candidates: PosterCandidate[] = [];
+  let cmcontinue: string | undefined;
+
+  console.log(`   📂 Söker kategori: ${category}`);
 
   try {
-    const url = new URL(WIKIMEDIA_API);
-    url.searchParams.set('action', 'query');
-    url.searchParams.set('list', 'categorymembers');
-    url.searchParams.set('cmtitle', `Category:${category}`);
-    url.searchParams.set('cmlimit', '100');
-    url.searchParams.set('cmtype', 'file');
-    url.searchParams.set('format', 'json');
+    do {
+      const url = new URL(WIKIMEDIA_API);
+      url.searchParams.set('action', 'query');
+      url.searchParams.set('list', 'categorymembers');
+      url.searchParams.set('cmtitle', `Category:${category}`);
+      url.searchParams.set('cmlimit', '100');
+      url.searchParams.set('cmtype', 'file');
+      url.searchParams.set('format', 'json');
+      if (cmcontinue) {
+        url.searchParams.set('cmcontinue', cmcontinue);
+      }
 
-    const response = await fetch(url.toString());
-    const data = await response.json();
+      const response = await fetchWithUserAgent(url);
+      if (!response.ok) {
+        console.log(`   ⚠️  HTTP ${response.status} från Wikimedia`);
+        break;
+      }
 
-    if (data.query?.categorymembers) {
-      for (const member of data.query.categorymembers) {
-        // Get file info
+      const data = await response.json();
+      cmcontinue = data.continue?.cmcontinue;
+
+      if (data.query?.categorymembers) {
+        // Batch fetch image info for all members
+        const titles = data.query.categorymembers.map((m: any) => m.title).join('|');
+
         const infoUrl = new URL(WIKIMEDIA_API);
         infoUrl.searchParams.set('action', 'query');
-        infoUrl.searchParams.set('titles', member.title);
+        infoUrl.searchParams.set('titles', titles);
         infoUrl.searchParams.set('prop', 'imageinfo');
-        infoUrl.searchParams.set('iiprop', 'url|extmetadata');
+        infoUrl.searchParams.set('iiprop', 'url|extmetadata|size|mime');
+        infoUrl.searchParams.set('iiurlwidth', '800');
         infoUrl.searchParams.set('format', 'json');
 
-        const infoResponse = await fetch(infoUrl.toString());
+        const infoResponse = await fetchWithUserAgent(infoUrl);
+        if (!infoResponse.ok) continue;
+
         const infoData = await infoResponse.json();
-
         const pages = infoData.query?.pages;
-        if (pages) {
-          const page = Object.values(pages)[0] as any;
-          const imageinfo = page.imageinfo?.[0];
 
-          if (imageinfo) {
-            // Extract year from filename or description
-            const yearMatch = member.title.match(/(\d{4})/);
-            const year = yearMatch ? parseInt(yearMatch[1]) : 0;
+        if (pages) {
+          for (const page of Object.values(pages) as any[]) {
+            const imageinfo = page.imageinfo?.[0];
+            if (!imageinfo) continue;
+
+            // Skip non-image files
+            if (!imageinfo.mime?.startsWith('image/')) continue;
+
+            // Extract info
+            const title = page.title?.replace('File:', '').replace(/\.(jpg|jpeg|png|gif|svg)$/i, '') || '';
+            const year = extractYearFromText(title + ' ' + (imageinfo.extmetadata?.ImageDescription?.value || ''));
+            const party = partyHint || detectPartyFromText(title + ' ' + (imageinfo.extmetadata?.Categories?.value || ''));
+
+            // Generate thumbnail URL if not provided
+            const fileName = page.title?.split(':')[1];
+            const thumbUrl = imageinfo.thumburl ||
+              (fileName ? `https://upload.wikimedia.org/wikipedia/commons/thumb/${imageinfo.url.split('/commons/')[1]}/400px-${fileName}` : null);
 
             candidates.push({
-              party: 'unknown', // Will be determined by category
+              party,
               year,
-              title: member.title.replace('File:', '').replace(/\.(jpg|jpeg|png|gif)$/i, ''),
+              title,
               image_url: imageinfo.url,
-              thumbnail_url: imageinfo.thumburl || imageinfo.url.replace('/commons/', '/commons/thumb/') + '/400px-' + member.title.split(':')[1],
+              thumbnail_url: thumbUrl || imageinfo.url,
               source: 'wikimedia',
-              source_url: `https://commons.wikimedia.org/wiki/${encodeURIComponent(member.title)}`,
+              source_url: `https://commons.wikimedia.org/wiki/${encodeURIComponent(page.title)}`,
               rights_status: determineRightsStatus(imageinfo.extmetadata),
-              verified: false
+              verified: false,
+              wikimedia_pageid: page.pageid
             });
           }
         }
-
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
       }
-    }
+
+      // Rate limiting
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+    } while (cmcontinue);
+
   } catch (error) {
-    console.error(`Error searching Wikimedia category ${category}:`, error);
+    console.error(`   ❌ Fel vid sökning i kategori ${category}:`, error);
   }
 
+  console.log(`   ✅ Hittade ${candidates.length} bilder`);
   return candidates;
 }
 
@@ -161,6 +314,8 @@ async function searchWikimediaCategory(category: string): Promise<PosterCandidat
 async function searchWikipediaElection(year: number): Promise<PosterCandidate[]> {
   const candidates: PosterCandidate[] = [];
 
+  console.log(`   📅 Söker riksdagsval ${year}...`);
+
   try {
     const pageTitle = `Riksdagsvalet_i_Sverige_${year}`;
     const url = new URL(WIKIPEDIA_API);
@@ -169,54 +324,74 @@ async function searchWikipediaElection(year: number): Promise<PosterCandidate[]>
     url.searchParams.set('prop', 'images');
     url.searchParams.set('format', 'json');
 
-    const response = await fetch(url.toString());
+    const response = await fetchWithUserAgent(url);
+    if (!response.ok) {
+      console.log(`   ⚠️  Sidan för ${year} hittades inte`);
+      return candidates;
+    }
+
     const data = await response.json();
 
     if (data.parse?.images) {
-      for (const image of data.parse.images) {
-        // Filter for poster-related images
-        const lowerImage = image.toLowerCase();
-        if (lowerImage.includes('affisch') || lowerImage.includes('poster') ||
-            lowerImage.includes('valrörelse') || lowerImage.includes('kampanj')) {
+      // Filter for poster-related images
+      const posterImages = data.parse.images.filter((image: string) => {
+        const lower = image.toLowerCase();
+        return lower.includes('affisch') || lower.includes('poster') ||
+               lower.includes('valrörelse') || lower.includes('kampanj') ||
+               lower.includes('valmanifest') || lower.includes('propaganda');
+      });
 
-          // Get image info from Commons
-          const infoUrl = new URL(WIKIMEDIA_API);
-          infoUrl.searchParams.set('action', 'query');
-          infoUrl.searchParams.set('titles', `File:${image}`);
-          infoUrl.searchParams.set('prop', 'imageinfo');
-          infoUrl.searchParams.set('iiprop', 'url');
-          infoUrl.searchParams.set('format', 'json');
+      if (posterImages.length === 0) {
+        console.log(`   ℹ️  Inga affischbilder på Wikipedia-sidan för ${year}`);
+        return candidates;
+      }
 
-          const infoResponse = await fetch(infoUrl.toString());
-          const infoData = await infoResponse.json();
+      // Batch fetch image info
+      const titles = posterImages.map((img: string) => `File:${img}`).join('|');
 
-          const pages = infoData.query?.pages;
-          if (pages) {
-            const page = Object.values(pages)[0] as any;
-            const imageinfo = page.imageinfo?.[0];
+      const infoUrl = new URL(WIKIMEDIA_API);
+      infoUrl.searchParams.set('action', 'query');
+      infoUrl.searchParams.set('titles', titles);
+      infoUrl.searchParams.set('prop', 'imageinfo');
+      infoUrl.searchParams.set('iiprop', 'url|extmetadata|size|mime');
+      infoUrl.searchParams.set('iiurlwidth', '800');
+      infoUrl.searchParams.set('format', 'json');
 
-            if (imageinfo) {
-              candidates.push({
-                party: 'unknown',
-                year,
-                title: image.replace(/\.(jpg|jpeg|png|gif)$/i, ''),
-                image_url: imageinfo.url,
-                source: 'wikimedia',
-                source_url: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(image)}`,
-                rights_status: 'unknown',
-                verified: false
-              });
-            }
-          }
+      const infoResponse = await fetchWithUserAgent(infoUrl);
+      if (!infoResponse.ok) return candidates;
+
+      const infoData = await infoResponse.json();
+      const pages = infoData.query?.pages;
+
+      if (pages) {
+        for (const page of Object.values(pages) as any[]) {
+          const imageinfo = page.imageinfo?.[0];
+          if (!imageinfo) continue;
+          if (!imageinfo.mime?.startsWith('image/')) continue;
+
+          const title = page.title?.replace('File:', '').replace(/\.(jpg|jpeg|png|gif|svg)$/i, '') || '';
+          const party = detectPartyFromText(title);
+
+          candidates.push({
+            party,
+            year,
+            title,
+            image_url: imageinfo.url,
+            thumbnail_url: imageinfo.thumburl || imageinfo.url,
+            source: 'wikimedia',
+            source_url: `https://commons.wikimedia.org/wiki/${encodeURIComponent(page.title)}`,
+            rights_status: determineRightsStatus(imageinfo.extmetadata),
+            verified: false,
+            wikimedia_pageid: page.pageid
+          });
         }
-
-        await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
   } catch (error) {
-    console.error(`Error searching Wikipedia for ${year}:`, error);
+    console.error(`   ❌ Fel vid sökning för ${year}:`, error);
   }
 
+  console.log(`   ✅ Hittade ${candidates.length} bilder för ${year}`);
   return candidates;
 }
 
@@ -225,11 +400,85 @@ async function searchWikipediaElection(year: number): Promise<PosterCandidate[]>
  */
 async function verifyUrl(url: string): Promise<{ ok: boolean; status: number }> {
   try {
-    const response = await fetch(url, { method: 'HEAD' });
+    const response = await fetchWithUserAgent(url, { method: 'HEAD' });
     return { ok: response.ok || response.status === 302, status: response.status };
   } catch {
     return { ok: false, status: 0 };
   }
+}
+
+/**
+ * Import candidates to Supabase database
+ */
+async function importCandidatesToDb(candidates: PosterCandidate[]): Promise<{ imported: number; skipped: number; failed: number }> {
+  const stats = { imported: 0, skipped: 0, failed: 0 };
+  const sb = getSupabase();
+
+  // Filter to verified candidates only
+  const verifiedCandidates = candidates.filter(c => c.verified && c.year > 0);
+  console.log(`\n📦 Importerar ${verifiedCandidates.length} verifierade kandidater till Supabase...`);
+
+  for (const candidate of verifiedCandidates) {
+    const id = generateCandidateId(candidate);
+
+    // Check if already exists
+    const { data: existing } = await sb
+      .from('posters')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (existing) {
+      stats.skipped++;
+      continue;
+    }
+
+    if (dryRun) {
+      console.log(`   🧪 DRY-RUN: Skulle skapa ${id}`);
+      stats.imported++;
+      continue;
+    }
+
+    // Insert poster
+    const { error: posterError } = await sb
+      .from('posters')
+      .insert({
+        id,
+        title: candidate.title,
+        year: candidate.year,
+        source: candidate.source,
+        source_url: candidate.source_url,
+        image_url: candidate.image_url,
+        thumbnail_url: candidate.thumbnail_url,
+        rights_status: candidate.rights_status || 'unknown',
+        upload_status: 'pending',
+      });
+
+    if (posterError) {
+      console.log(`   ❌ Fel vid import av ${id}: ${posterError.message}`);
+      stats.failed++;
+      continue;
+    }
+
+    // Insert curation data if party is known
+    if (candidate.party && candidate.party !== 'unknown') {
+      await sb
+        .from('poster_curation')
+        .upsert({
+          poster_id: id,
+          party: candidate.party,
+          election_year: candidate.year,
+        });
+    }
+
+    console.log(`   ✅ Importerade: ${id}`);
+    stats.imported++;
+
+    // Rate limit
+    await new Promise(r => setTimeout(r, 50));
+  }
+
+  return stats;
 }
 
 /**
@@ -287,82 +536,113 @@ function saveCandidates(filepath: string, candidates: PosterCandidate[]): void {
 /**
  * Main collection function
  */
-async function collectPosters(options: {
-  party?: string;
-  year?: number;
-  scanAll?: boolean;
-  verify?: string;
-}): Promise<void> {
-  const outputPath = path.join(__dirname, '..', 'data', 'poster-candidates.json');
-  let candidates: PosterCandidate[] = loadCandidates(outputPath);
+async function collectPosters(): Promise<void> {
+  console.log('═══════════════════════════════════════════════════════════');
+  console.log('   📚 Valaffischmuseet — Poster Collection');
+  console.log('═══════════════════════════════════════════════════════════');
+  if (dryRun) console.log('   Mode: DRY-RUN');
+  if (scanAll) console.log('   Mode: SCAN-ALL');
+  if (modernOnly) console.log('   Filter: Moderna val (1988-2022)');
+  if (partyArg) console.log(`   Filter: Parti = ${partyArg}`);
+  if (yearArg) console.log(`   Filter: År = ${yearArg}`);
+  if (verifyMode) console.log('   Mode: VERIFY');
+  if (importToDb) console.log('   Mode: IMPORT-TO-DB');
+  console.log('');
 
-  if (options.verify) {
-    // Verify existing candidates
-    console.log('Verifying candidates...');
-    for (const candidate of candidates) {
-      if (!candidate.verified) {
-        const result = await verifyUrl(candidate.image_url);
-        if (result.ok) {
-          candidate.verified = true;
-          candidate.verification_notes = `URL verified ${new Date().toISOString()}`;
-          console.log(`✓ ${candidate.title}`);
-        } else {
-          candidate.verification_notes = `URL failed: ${result.status}`;
-          console.log(`✗ ${candidate.title} (${result.status})`);
-        }
-        await new Promise(resolve => setTimeout(resolve, 200));
+  let candidates: PosterCandidate[] = loadCandidates(OUTPUT_PATH);
+  console.log(`📁 Laddade ${candidates.length} befintliga kandidater\n`);
+
+  // --- VERIFY MODE ---
+  if (verifyMode) {
+    console.log('🔍 Verifierar URL:er...\n');
+    let verified = 0, failed = 0;
+    const unverified = candidates.filter(c => !c.verified);
+
+    for (let i = 0; i < unverified.length; i++) {
+      const candidate = unverified[i];
+      process.stdout.write(`   [${i + 1}/${unverified.length}] ${candidate.title.substring(0, 40)}... `);
+
+      const result = await verifyUrl(candidate.image_url);
+      if (result.ok) {
+        candidate.verified = true;
+        candidate.verification_notes = `URL verified ${new Date().toISOString()}`;
+        console.log('✅');
+        verified++;
+      } else {
+        candidate.verification_notes = `URL failed: ${result.status}`;
+        console.log(`❌ (${result.status})`);
+        failed++;
       }
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
-    saveCandidates(outputPath, candidates);
+
+    saveCandidates(OUTPUT_PATH, candidates);
+    console.log(`\n✅ Verifierade: ${verified}`);
+    console.log(`❌ Misslyckades: ${failed}`);
     return;
   }
 
-  if (options.party) {
-    // Search specific party
-    const partyConfig = PARTIES[options.party as keyof typeof PARTIES];
+  // --- IMPORT TO DB MODE ---
+  if (importToDb) {
+    const stats = await importCandidatesToDb(candidates);
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('   📊 IMPORT SAMMANFATTNING');
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log(`   ✅ Importerade: ${stats.imported}`);
+    console.log(`   ⏭️  Överhoppade: ${stats.skipped}`);
+    console.log(`   ❌ Misslyckades: ${stats.failed}`);
+    return;
+  }
+
+  // --- COLLECTION MODE ---
+  const yearsToSearch = modernOnly ? MODERN_YEARS :
+                        yearArg ? [yearArg] :
+                        ELECTION_YEARS;
+
+  // Search party-specific categories
+  if (partyArg) {
+    const partyConfig = PARTIES[partyArg];
     if (partyConfig?.wikimedia_category) {
-      console.log(`Searching Wikimedia for ${options.party}...`);
-      const newCandidates = await searchWikimediaCategory(partyConfig.wikimedia_category);
+      console.log(`\n🔎 Söker ${partyArg}...`);
+      const newCandidates = await searchWikimediaCategory(partyConfig.wikimedia_category, partyArg);
       for (const c of newCandidates) {
-        c.party = options.party;
+        c.party = partyArg;
         if (!candidates.some(existing => existing.source_url === c.source_url)) {
           candidates.push(c);
         }
       }
     }
-  }
-
-  if (options.year) {
-    // Search specific election year
-    console.log(`Searching Wikipedia for ${options.year} election...`);
-    const newCandidates = await searchWikipediaElection(options.year);
-    for (const c of newCandidates) {
-      if (!candidates.some(existing => existing.source_url === c.source_url)) {
-        candidates.push(c);
-      }
-    }
-  }
-
-  if (options.scanAll) {
-    // Full scan
-    console.log('Starting full scan of all parties and years...');
-
+  } else if (scanAll) {
+    // Search all party categories
     for (const [partyName, partyConfig] of Object.entries(PARTIES)) {
-      if (partyConfig.wikimedia_category) {
-        console.log(`\nSearching ${partyName}...`);
-        const newCandidates = await searchWikimediaCategory(partyConfig.wikimedia_category);
-        for (const c of newCandidates) {
-          c.party = partyName;
-          if (!candidates.some(existing => existing.source_url === c.source_url)) {
-            candidates.push(c);
-          }
+      console.log(`\n🔎 Söker ${partyName}...`);
+      const newCandidates = await searchWikimediaCategory(partyConfig.wikimedia_category, partyName);
+      for (const c of newCandidates) {
+        c.party = partyName;
+        if (!candidates.some(existing => existing.source_url === c.source_url)) {
+          candidates.push(c);
         }
-        await new Promise(resolve => setTimeout(resolve, 1000));
       }
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    for (const year of ELECTION_YEARS) {
-      console.log(`\nSearching election ${year}...`);
+    // Search additional general categories
+    console.log('\n🔎 Söker generella kategorier...');
+    for (const category of ADDITIONAL_CATEGORIES) {
+      const newCandidates = await searchWikimediaCategory(category);
+      for (const c of newCandidates) {
+        if (!candidates.some(existing => existing.source_url === c.source_url)) {
+          candidates.push(c);
+        }
+      }
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  // Search Wikipedia election pages
+  if (scanAll || yearArg) {
+    console.log('\n🔎 Söker Wikipedia-valsidor...');
+    for (const year of yearsToSearch) {
       const newCandidates = await searchWikipediaElection(year);
       for (const c of newCandidates) {
         if (!candidates.some(existing => existing.source_url === c.source_url)) {
@@ -373,43 +653,51 @@ async function collectPosters(options: {
     }
   }
 
-  saveCandidates(outputPath, candidates);
+  // Save results
+  saveCandidates(OUTPUT_PATH, candidates);
 
   // Print summary
-  console.log('\n=== Collection Summary ===');
-  console.log(`Total candidates: ${candidates.length}`);
-  console.log(`Verified: ${candidates.filter(c => c.verified).length}`);
-  console.log(`By source:`);
-  const bySources = candidates.reduce((acc, c) => {
-    acc[c.source] = (acc[c.source] || 0) + 1;
+  console.log('\n═══════════════════════════════════════════════════════════');
+  console.log('   📊 SAMMANFATTNING');
+  console.log('═══════════════════════════════════════════════════════════');
+  console.log(`   Totalt kandidater: ${candidates.length}`);
+  console.log(`   Verifierade: ${candidates.filter(c => c.verified).length}`);
+
+  // By party
+  console.log('\n   Per parti:');
+  const byParty = candidates.reduce((acc, c) => {
+    const party = c.party || 'unknown';
+    acc[party] = (acc[party] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
-  for (const [source, count] of Object.entries(bySources)) {
-    console.log(`  ${source}: ${count}`);
+  for (const [party, count] of Object.entries(byParty).sort((a, b) => b[1] - a[1])) {
+    console.log(`     ${party}: ${count}`);
   }
+
+  // By year range
+  console.log('\n   Per årtionde:');
+  const byDecade = candidates.reduce((acc, c) => {
+    if (!c.year) {
+      acc['Okänt'] = (acc['Okänt'] || 0) + 1;
+    } else {
+      const decade = Math.floor(c.year / 10) * 10;
+      acc[`${decade}-talet`] = (acc[`${decade}-talet`] || 0) + 1;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+  for (const [decade, count] of Object.entries(byDecade).sort()) {
+    console.log(`     ${decade}: ${count}`);
+  }
+
+  console.log('\n═══════════════════════════════════════════════════════════');
+  console.log('   💡 Nästa steg:');
+  console.log('      npx tsx scripts/collect-posters.ts --verify');
+  console.log('      npx tsx scripts/collect-posters.ts --import-to-db');
+  console.log('═══════════════════════════════════════════════════════════');
 }
 
-// CLI handling
-const args = process.argv.slice(2);
-const options: {
-  party?: string;
-  year?: number;
-  scanAll?: boolean;
-  verify?: string;
-} = {};
-
-for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--party' && args[i + 1]) {
-    options.party = args[i + 1];
-    i++;
-  } else if (args[i] === '--year' && args[i + 1]) {
-    options.year = parseInt(args[i + 1]);
-    i++;
-  } else if (args[i] === '--scan-all') {
-    options.scanAll = true;
-  } else if (args[i] === '--verify' && args[i + 1]) {
-    options.verify = args[i + 1];
-  }
-}
-
-collectPosters(options).catch(console.error);
+// --- Run ---
+collectPosters().catch(err => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});

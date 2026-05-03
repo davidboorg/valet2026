@@ -27,7 +27,8 @@ function transformSupabasePoster(row: VElectionPoster): Poster {
     creator: row.creator,
     year: row.year,
     source: row.source as PosterSource,
-    thumbnailUrl: row.thumbnail_url || row.image_url || '',
+    // Prioritera storage_public_url för thumbnailUrl
+    thumbnailUrl: row.storage_public_url || row.thumbnail_url || row.image_url || '',
     imageUrl: row.image_url,
     highResUrl: row.high_res_url,
     iiifImageBaseUrl: row.iiif_image_base_url,
@@ -39,6 +40,9 @@ function transformSupabasePoster(row: VElectionPoster): Poster {
     sourceAttribution: row.source_attribution,
     party: row.party,
     themes: row.themes,
+    // Supabase Storage fields
+    storagePublicUrl: row.storage_public_url,
+    uploadStatus: row.upload_status,
   };
 }
 
