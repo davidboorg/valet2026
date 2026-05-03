@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       // Supabase Storage (vår primära bildkälla)
       {
         protocol: 'https',
-        hostname: '*.supabase.co',
+        hostname: 'htleorhudrnmbklialsp.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
       {
