@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Poster } from '@/lib/types';
-import { resolvePosterImage } from '@/lib/poster-image';
+import { resolvePosterImage, shouldSkipOptimization } from '@/lib/poster-image';
 
 interface ElectionContext {
   election_year: number;
@@ -119,6 +119,7 @@ export function YearCluster({
                         fill
                         sizes="80px"
                         className="object-contain group-hover/poster:scale-105 transition-transform"
+                        unoptimized={shouldSkipOptimization(imageUrl)}
                       />
                     )}
                   </Link>

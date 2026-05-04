@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import type { Poster } from '@/lib/types';
-import { resolvePosterImage } from '@/lib/poster-image';
+import { resolvePosterImage, shouldSkipOptimization } from '@/lib/poster-image';
 
 /**
  * KenBurnsHero — affischerna är videon.
@@ -120,6 +120,7 @@ export function KenBurnsHero({ posters, yearMin, yearMax, totalCount }: KenBurns
                   priority={activeIndex === 0}
                   sizes="100vw"
                   className="object-cover object-center"
+                  unoptimized={shouldSkipOptimization(imageUrl)}
                 />
               )}
             </motion.div>

@@ -5,7 +5,7 @@ import { useRef, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { Poster } from '@/lib/types';
-import { resolvePosterImage } from '@/lib/poster-image';
+import { resolvePosterImage, shouldSkipOptimization } from '@/lib/poster-image';
 
 interface AnimatedHeroProps {
   posters: Poster[];
@@ -80,6 +80,7 @@ export function AnimatedHero({ posters }: AnimatedHeroProps) {
             sizes="100vw"
             className="object-cover"
             priority
+            unoptimized={shouldSkipOptimization(imageUrl)}
           />
         </motion.div>
 

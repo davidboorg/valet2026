@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Poster } from '@/lib/types';
-import { resolvePosterImage } from '@/lib/poster-image';
+import { resolvePosterImage, shouldSkipOptimization } from '@/lib/poster-image';
 import { RightsBadge } from './rights-badge';
 import { ToneBadge } from './rhetoric-overlay';
 
@@ -51,6 +51,7 @@ export function PosterCard({ poster, priority = false, size = 'default', showRhe
               sizes={size === 'large' ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"}
               className="object-contain transition-transform duration-700 ease-out group-hover:scale-110"
               priority={priority}
+              unoptimized={shouldSkipOptimization(imageUrl)}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-[var(--text-secondary)]">

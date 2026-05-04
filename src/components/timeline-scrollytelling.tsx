@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import type { Poster } from '@/lib/types';
-import { resolvePosterImage } from '@/lib/poster-image';
+import { resolvePosterImage, shouldSkipOptimization } from '@/lib/poster-image';
 
 /**
  * Editorial story moment for scrollytelling
@@ -393,6 +393,7 @@ function StorySection({ moment, featuredPosters, isEven, onInView }: StorySectio
                       fill
                       sizes="(max-width: 768px) 40vw, 200px"
                       className="object-contain group-hover:scale-105 transition-transform duration-500"
+                      unoptimized={shouldSkipOptimization(imageUrl)}
                     />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

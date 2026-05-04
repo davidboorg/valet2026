@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import type { Poster } from '@/lib/types';
-import { resolvePosterImage } from '@/lib/poster-image';
+import { resolvePosterImage, shouldSkipOptimization } from '@/lib/poster-image';
 
 interface Party {
   slug: string | null;
@@ -239,6 +239,7 @@ export function VerticalTimeline({
                                     fill
                                     sizes="(max-width: 640px) 140px, (max-width: 1024px) 20vw, 12vw"
                                     className="object-contain group-hover:scale-105 transition-transform duration-300"
+                                    unoptimized={shouldSkipOptimization(imageUrl)}
                                   />
                                 )}
                                 {/* Hover overlay */}

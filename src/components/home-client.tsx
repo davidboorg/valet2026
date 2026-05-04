@@ -11,7 +11,7 @@ import {
   ScrollLinkedMotion,
 } from '@/components/home-scroll-effects';
 import type { Poster } from '@/lib/types';
-import { resolvePosterImage } from '@/lib/poster-image';
+import { resolvePosterImage, shouldSkipOptimization } from '@/lib/poster-image';
 
 interface HomeClientProps {
   allPosters: Poster[];
@@ -136,6 +136,7 @@ export function HomeClient({
                             : '(max-width: 768px) 50vw, 25vw'
                         }
                         className="object-contain transition-transform duration-700 group-hover:scale-[1.03]"
+                        unoptimized={shouldSkipOptimization(resolvePosterImage(poster))}
                       />
                     )}
                   </div>

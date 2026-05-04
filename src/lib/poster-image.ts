@@ -82,6 +82,18 @@ export function isInStorage(poster: Poster): boolean {
 }
 
 /**
+ * Ska bilden renderas utan Next.js-optimering?
+ * Storage-bilder är redan optimerade, skip Next.js Image för att undvika timeout.
+ */
+export function shouldSkipOptimization(imageUrl: string): boolean {
+  // Supabase Storage - redan optimerade vid upload
+  if (imageUrl.includes('supabase.co/storage')) return true;
+  // Wikimedia - har egna thumbnails
+  if (imageUrl.includes('upload.wikimedia.org')) return true;
+  return false;
+}
+
+/**
  * Hur många affischer i en lista är hostade av oss?
  */
 export function countLocallyHosted(posters: Poster[]): number {
