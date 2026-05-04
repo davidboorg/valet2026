@@ -74,7 +74,23 @@ const ADDITIONAL_CATEGORIES = [
   'Political_posters_of_Sweden',
   'Swedish_political_posters',
   'Valaffischer',
-  'Swedish_election_campaign_material'
+  'Swedish_election_campaign_material',
+  'Political_campaign_material_of_Sweden',
+  'Election_campaigns_in_Sweden',
+];
+
+// Söktermer för Wikimedia Search API
+const SEARCH_QUERIES = [
+  'Swedish election poster',
+  'svenska valaffisch',
+  'riksdagsval affisch',
+  'valrörelse Sverige',
+  'Swedish political poster',
+  'socialdemokraterna affisch',
+  'moderaterna affisch',
+  'centerpartiet affisch',
+  'högerpartiet affisch',
+  'bondeförbundet affisch',
 ];
 
 // Parties to track
@@ -195,6 +211,53 @@ function extractYearFromText(text: string): number {
   return 0;
 }
 
+/**
+ * Check if text indicates this is a Swedish election poster
+ */
+function isSwedishElectionPoster(text: string): boolean {
+  const lowerText = text.toLowerCase();
+
+  // Must contain election-related terms
+  const electionTerms = [
+    'valaffisch', 'valrörelse', 'riksdagsval', 'election poster',
+    'valkampanj', 'valmanifest', 'kampanjaffisch', 'val ',
+    'rösta', 'vote', 'andrakammarval', 'folkomröstning',
+    'election campaign', 'swedish election', 'swedish_election',
+    'election_posters', 'political_posters', 'valplakat'
+  ];
+
+  const hasElectionTerm = electionTerms.some(term => lowerText.includes(term));
+
+  // Or contains Swedish party names with poster/affisch context
+  const partyTerms = [
+    'socialdemokrat', 'moderat', 'höger', 'center', 'bonde',
+    'liberal', 'folkparti', 'vänster', 'kommunist', 'miljöparti',
+    'kristdemokrat', 'sverigedemokrat', 'pirat'
+  ];
+
+  const posterTerms = ['affisch', 'poster', 'plakat', 'kampanj'];
+
+  const hasPartyWithPoster = partyTerms.some(party => lowerText.includes(party)) &&
+                              posterTerms.some(poster => lowerText.includes(poster));
+
+  // Sweden-related context
+  const swedenTerms = ['sweden', 'swedish', 'sverige', 'svensk'];
+  const hasSwedishContext = swedenTerms.some(term => lowerText.includes(term));
+
+  // Exclude clearly non-Swedish content
+  const excludeTerms = [
+    'finland', 'finnish', 'denmark', 'danish', 'norway', 'norwegian',
+    'germany', 'german', 'netherlands', 'dutch', 'belgium', 'sfp ',
+    'finnish', 'suomi', 'ikl', 'pvda', 'cdu', 'spd'
+  ];
+
+  const isExcluded = excludeTerms.some(term => lowerText.includes(term));
+
+  if (isExcluded) return false;
+
+  return hasElectionTerm || hasPartyWithPoster || (hasSwedishContext && posterTerms.some(t => lowerText.includes(t)));
+}
+
 function generateCandidateId(candidate: PosterCandidate): string {
   // Generate a deterministic UUID v5-style from source_url
   // Using a namespace UUID and the source_url as the name
@@ -271,8 +334,17 @@ async function searchWikimediaCategory(category: string, partyHint?: string): Pr
 
             // Extract info
             const title = page.title?.replace('File:', '').replace(/\.(jpg|jpeg|png|gif|svg)$/i, '') || '';
-            const year = extractYearFromText(title + ' ' + (imageinfo.extmetadata?.ImageDescription?.value || ''));
-            const party = partyHint || detectPartyFromText(title + ' ' + (imageinfo.extmetadata?.Categories?.value || ''));
+            const description = imageinfo.extmetadata?.ImageDescription?.value || '';
+            const categories = imageinfo.extmetadata?.Categories?.value || '';
+            const combinedText = `${title} ${description} ${categories}`;
+
+            // Filter: must be a Swedish election poster (unless in a trusted category)
+            const trustedCategories = ['Election_posters_in_Sweden', 'Political_posters_of_Sweden'];
+            const isTrustedCategory = trustedCategories.includes(category);
+            if (!isTrustedCategory && !isSwedishElectionPoster(combinedText)) continue;
+
+            const year = extractYearFromText(combinedText);
+            const party = partyHint || detectPartyFromText(combinedText);
 
             // Generate thumbnail URL if not provided
             const fileName = page.title?.split(':')[1];
@@ -304,7 +376,101 @@ async function searchWikimediaCategory(category: string, partyHint?: string): Pr
     console.error(`   ❌ Fel vid sökning i kategori ${category}:`, error);
   }
 
-  console.log(`   ✅ Hittade ${candidates.length} bilder`);
+  console.log(`   ✅ Hittade ${candidates.length} riksdagsval-affischer`);
+  return candidates;
+}
+
+/**
+ * Search Wikimedia Commons using search API
+ */
+async function searchWikimediaSearch(query: string): Promise<PosterCandidate[]> {
+  const candidates: PosterCandidate[] = [];
+
+  console.log(`   🔍 Söker: "${query}"`);
+
+  try {
+    const url = new URL(WIKIMEDIA_API);
+    url.searchParams.set('action', 'query');
+    url.searchParams.set('list', 'search');
+    url.searchParams.set('srsearch', `${query} filetype:bitmap`);
+    url.searchParams.set('srnamespace', '6'); // File namespace
+    url.searchParams.set('srlimit', '50');
+    url.searchParams.set('format', 'json');
+
+    const response = await fetchWithUserAgent(url);
+    if (!response.ok) {
+      console.log(`   ⚠️  HTTP ${response.status}`);
+      return candidates;
+    }
+
+    const data = await response.json();
+    const searchResults = data.query?.search || [];
+
+    if (searchResults.length === 0) {
+      console.log(`   ℹ️  Inga resultat`);
+      return candidates;
+    }
+
+    // Batch fetch image info
+    const titles = searchResults.map((r: any) => r.title).join('|');
+
+    const infoUrl = new URL(WIKIMEDIA_API);
+    infoUrl.searchParams.set('action', 'query');
+    infoUrl.searchParams.set('titles', titles);
+    infoUrl.searchParams.set('prop', 'imageinfo');
+    infoUrl.searchParams.set('iiprop', 'url|extmetadata|size|mime');
+    infoUrl.searchParams.set('iiurlwidth', '800');
+    infoUrl.searchParams.set('format', 'json');
+
+    const infoResponse = await fetchWithUserAgent(infoUrl);
+    if (!infoResponse.ok) return candidates;
+
+    const infoData = await infoResponse.json();
+    const pages = infoData.query?.pages;
+
+    if (pages) {
+      for (const page of Object.values(pages) as any[]) {
+        const imageinfo = page.imageinfo?.[0];
+        if (!imageinfo) continue;
+
+        // Skip non-image files and TIFFs (often too large)
+        if (!imageinfo.mime?.startsWith('image/')) continue;
+        if (imageinfo.mime === 'image/tiff') continue;
+
+        const title = page.title?.replace('File:', '').replace(/\.(jpg|jpeg|png|gif|svg)$/i, '') || '';
+        const description = imageinfo.extmetadata?.ImageDescription?.value || '';
+        const categories = imageinfo.extmetadata?.Categories?.value || '';
+        const combinedText = `${title} ${description} ${categories}`;
+
+        // Filter: must be a Swedish election poster
+        if (!isSwedishElectionPoster(combinedText)) continue;
+
+        const year = extractYearFromText(combinedText);
+        const party = detectPartyFromText(combinedText);
+
+        const fileName = page.title?.split(':')[1];
+        const thumbUrl = imageinfo.thumburl ||
+          (fileName && imageinfo.url ? `https://upload.wikimedia.org/wikipedia/commons/thumb/${imageinfo.url.split('/commons/')[1]}/400px-${fileName}` : null);
+
+        candidates.push({
+          party,
+          year,
+          title,
+          image_url: imageinfo.url,
+          thumbnail_url: thumbUrl || imageinfo.url,
+          source: 'wikimedia',
+          source_url: `https://commons.wikimedia.org/wiki/${encodeURIComponent(page.title)}`,
+          rights_status: determineRightsStatus(imageinfo.extmetadata),
+          verified: false,
+          wikimedia_pageid: page.pageid
+        });
+      }
+    }
+  } catch (error) {
+    console.error(`   ❌ Sökfel:`, error);
+  }
+
+  console.log(`   ✅ Hittade ${candidates.length} riksdagsval-affischer`);
   return candidates;
 }
 
@@ -636,6 +802,18 @@ async function collectPosters(): Promise<void> {
         }
       }
       await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    // Search using Wikimedia search API
+    console.log('\n🔎 Söker med Wikimedia Search API...');
+    for (const query of SEARCH_QUERIES) {
+      const newCandidates = await searchWikimediaSearch(query);
+      for (const c of newCandidates) {
+        if (!candidates.some(existing => existing.source_url === c.source_url)) {
+          candidates.push(c);
+        }
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Rate limit
     }
   }
 

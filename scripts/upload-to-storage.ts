@@ -119,9 +119,41 @@ function sha256(buffer: Buffer): string {
   return crypto.createHash('sha256').update(buffer).digest('hex');
 }
 
-async function downloadImage(url: string): Promise<{ buffer: Buffer; contentType: string } | null> {
+/**
+ * Convert Wikimedia full-size URL to a thumbnail URL
+ * Wikimedia Commons URLs like:
+ *   https://upload.wikimedia.org/wikipedia/commons/9/91/Filename.jpg
+ * become:
+ *   https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Filename.jpg/2000px-Filename.jpg
+ */
+function getWikimediaThumbUrl(url: string, maxWidth: number = 2000): string {
+  // Check if it's a Wikimedia URL
+  if (!url.includes('upload.wikimedia.org')) {
+    return url;
+  }
+
+  // Skip if already a thumbnail
+  if (url.includes('/thumb/')) {
+    return url;
+  }
+
+  // Parse the URL to extract path components
+  const match = url.match(/\/wikipedia\/commons\/([a-f0-9])\/([a-f0-9]{2})\/(.+)$/i);
+  if (!match) {
+    return url;
+  }
+
+  const [, hash1, hash2, filename] = match;
+  const encodedFilename = encodeURIComponent(decodeURIComponent(filename));
+  return `https://upload.wikimedia.org/wikipedia/commons/thumb/${hash1}/${hash2}/${filename}/${maxWidth}px-${encodedFilename}`;
+}
+
+async function downloadImage(url: string, tryThumbnail: boolean = true): Promise<{ buffer: Buffer; contentType: string } | null> {
+  // Use thumbnail version for Wikimedia to avoid huge files
+  const downloadUrl = tryThumbnail ? getWikimediaThumbUrl(url, 2000) : url;
+
   try {
-    const res = await fetch(url, {
+    const res = await fetch(downloadUrl, {
       headers: {
         'User-Agent': 'ValaffischmuseetBot/1.0 (kontakt: david@surpriseventures.io)',
         Accept: 'image/*,*/*;q=0.8',
@@ -130,7 +162,12 @@ async function downloadImage(url: string): Promise<{ buffer: Buffer; contentType
     });
 
     if (!res.ok) {
-      console.log(`   ⚠️  HTTP ${res.status} för ${url}`);
+      // If thumbnail fails, try original (might be smaller files)
+      if (tryThumbnail && downloadUrl !== url) {
+        console.log(`   ⚠️  Thumbnail misslyckades (${res.status}), försöker original...`);
+        return downloadImage(url, false);
+      }
+      console.log(`   ⚠️  HTTP ${res.status} för ${downloadUrl}`);
       return null;
     }
 
@@ -145,6 +182,10 @@ async function downloadImage(url: string): Promise<{ buffer: Buffer; contentType
       console.log(`   ⚠️  För liten bild: ${buffer.length} bytes`);
       return null;
     }
+
+    // Log size for debugging
+    const sizeMB = (buffer.length / 1024 / 1024).toFixed(2);
+    console.log(`   📦 Bildstorlek: ${sizeMB} MB`);
 
     return { buffer, contentType };
   } catch (err) {
