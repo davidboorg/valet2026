@@ -5,8 +5,9 @@
  */
 
 import { supabase, isSupabaseConfigured } from './supabase';
-import { searchPoliticalPosters, filterElectionYearPosters, transformKBPoster } from './kb-api';
+import { searchPoliticalPosters, filterElectionYearPosters, transformKBPoster, getPosterById as getKBPosterById } from './kb-api';
 import { getAllExternalPosters } from './external-sources';
+import { filterPosters, type PosterFilters } from './filter-utils';
 import type { Poster, VElectionPoster, PosterSource, RightsStatus } from './types';
 
 export interface GetAllElectionPostersOptions {
@@ -156,7 +157,7 @@ export async function getAllElectionPosters(
 /**
  * Get a single poster by ID
  *
- * Tries Supabase first, then falls back to searching KB API and external sources.
+ * Tries Supabase first, then falls back to KB API and external sources.
  */
 export async function getPosterById(id: string): Promise<Poster | null> {
   // Try Supabase first
@@ -183,8 +184,24 @@ export async function getPosterById(id: string): Promise<Poster | null> {
     return externalMatch;
   }
 
-  // Fallback: try KB API (the id might be a dark-ID)
-  // Note: This would require getPosterById from kb-api which fetches from KB directly
+  // Fallback: try KB API directly (id might be a dark-ID like "dark-123456")
+  try {
+    // First try direct fetch
+    const kbPoster = await getKBPosterById(id);
+    if (kbPoster) {
+      return transformKBPoster(kbPoster);
+    }
+
+    // If that fails, search in the collection
+    const response = await searchPoliticalPosters({ limit: 200 });
+    const foundPoster = response.hits.find(p => p['@id'].includes(id));
+    if (foundPoster) {
+      return transformKBPoster(foundPoster);
+    }
+  } catch (err) {
+    console.warn('Failed to fetch poster from KB API:', err);
+  }
+
   return null;
 }
 
@@ -208,3 +225,110 @@ export async function getPostersByYearRange(
 ): Promise<Poster[]> {
   return getAllElectionPosters({ ...options, fromYear, toYear });
 }
+
+/**
+ * Search posters with filter utilities
+ *
+ * Uses the testable filter-utils for proper party/theme matching.
+ */
+export async function searchPosters(filters: PosterFilters): Promise<Poster[]> {
+  // Get all posters first (with basic Supabase filters if available)
+  const allPosters = await getAllElectionPosters({
+    limit: 500,
+    sort: '-year',
+    fromYear: filters.fromYear,
+    toYear: filters.toYear,
+  });
+
+  // Apply client-side filtering using filter-utils
+  return filterPosters(allPosters, filters);
+}
+
+/**
+ * Get featured posters for homepage
+ *
+ * Returns a curated selection of visually striking posters.
+ */
+export async function getFeaturedPosters(limit: number = 5): Promise<Poster[]> {
+  const allPosters = await getAllElectionPosters({ limit: 100, sort: '-year' });
+
+  // Prioritize posters with images
+  const withImages = allPosters.filter(
+    p => p.storagePublicUrl || p.thumbnailUrl || p.imageUrl || p.iiifImageBaseUrl
+  );
+
+  // Try to get variety across decades and parties
+  const selected: Poster[] = [];
+  const usedDecades = new Set<number>();
+  const usedParties = new Set<string>();
+
+  for (const poster of withImages) {
+    if (selected.length >= limit) break;
+
+    const decade = poster.year ? Math.floor(poster.year / 10) * 10 : 0;
+    const party = poster.party?.toLowerCase() || 'unknown';
+
+    // Prioritize diversity
+    if (!usedDecades.has(decade) || !usedParties.has(party)) {
+      selected.push(poster);
+      usedDecades.add(decade);
+      usedParties.add(party);
+    }
+  }
+
+  // Fill remaining slots if needed
+  while (selected.length < limit && selected.length < withImages.length) {
+    const next = withImages.find(p => !selected.includes(p));
+    if (next) selected.push(next);
+    else break;
+  }
+
+  return selected;
+}
+
+/**
+ * Get related posters (same party or era)
+ */
+export async function getRelatedPosters(
+  poster: Poster,
+  limit: number = 6
+): Promise<Poster[]> {
+  const allPosters = await getAllElectionPosters({ limit: 200 });
+
+  // Filter out the current poster
+  const others = allPosters.filter(p => p.id !== poster.id);
+
+  // Score by relevance
+  const scored = others.map(p => {
+    let score = 0;
+
+    // Same party is highly relevant
+    if (poster.party && p.party && p.party.toLowerCase() === poster.party.toLowerCase()) {
+      score += 10;
+    }
+
+    // Same decade is relevant
+    if (poster.year && p.year) {
+      const posterDecade = Math.floor(poster.year / 10) * 10;
+      const pDecade = Math.floor(p.year / 10) * 10;
+      if (posterDecade === pDecade) {
+        score += 5;
+      }
+    }
+
+    // Has image is a plus
+    if (p.storagePublicUrl || p.thumbnailUrl || p.imageUrl) {
+      score += 2;
+    }
+
+    return { poster: p, score };
+  });
+
+  // Sort by score descending
+  scored.sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, limit).map(s => s.poster);
+}
+
+// Re-export filter utilities for convenience
+export { filterPosters, type PosterFilters } from './filter-utils';

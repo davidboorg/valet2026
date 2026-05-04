@@ -715,7 +715,7 @@ async function collectPosters(): Promise<void> {
   if (importToDb) console.log('   Mode: IMPORT-TO-DB');
   console.log('');
 
-  let candidates: PosterCandidate[] = loadCandidates(OUTPUT_PATH);
+  const candidates: PosterCandidate[] = loadCandidates(OUTPUT_PATH);
   console.log(`📁 Laddade ${candidates.length} befintliga kandidater\n`);
 
   // --- VERIFY MODE ---

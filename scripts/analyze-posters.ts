@@ -61,6 +61,20 @@ if (!anthropicKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 const anthropic = new Anthropic({ apiKey: anthropicKey });
 
+// Analysis metadata for reproducibility
+const ANALYSIS_MODEL = 'claude-sonnet-4-20250514';
+const ANALYSIS_PROMPT_VERSION = '1.0.0';
+// Simple hash of prompt content for exact reproducibility tracking
+const getPromptHash = (prompt: string): string => {
+  let hash = 0;
+  for (let i = 0; i < Math.min(prompt.length, 500); i++) {
+    const char = prompt.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(16);
+};
+
 // Swedish political parties with historical context
 const PARTY_CONTEXT = `
 Svenska politiska partier (historiska och moderna namn):
@@ -171,7 +185,8 @@ interface PosterRow {
   poster_curation: { attributed_party?: string; party?: string }[] | null;
 }
 
-async function fetchImageAsBase64(url: string): Promise<{ base64: string; mediaType: string } | null> {
+type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+async function fetchImageAsBase64(url: string): Promise<{ base64: string; mediaType: ImageMediaType } | null> {
   try {
     const response = await fetch(url, {
       headers: {
@@ -280,7 +295,7 @@ async function analyzeImage(imageUrl: string, posterId: string): Promise<Analysi
   }
 }
 
-async function updatePosterCuration(posterId: string, analysis: AnalysisResult, posterYear: number | null) {
+async function updatePosterCuration(posterId: string, analysis: AnalysisResult, posterYear: number | null, sourceUrl: string) {
   // Map party slug to display name
   const partyMap: Record<string, string> = {
     socialdemokraterna: 'Socialdemokraterna',
@@ -318,6 +333,13 @@ async function updatePosterCuration(posterId: string, analysis: AnalysisResult, 
     context_text_short: analysis.historical_note,
     curation_status: 'draft',
     updated_at: new Date().toISOString(),
+    // Analysis metadata for reproducibility
+    analysis_model: ANALYSIS_MODEL,
+    analysis_prompt_version: ANALYSIS_PROMPT_VERSION,
+    analysis_prompt_hash: getPromptHash(ANALYSIS_PROMPT),
+    analyzed_at: new Date().toISOString(),
+    analysis_source_url: sourceUrl,
+    analysis_status: 'completed',
   };
 
   // Also update slogan on the poster itself if detected
@@ -443,7 +465,7 @@ async function main() {
     const analysis = await analyzeImage(imageUrl, displayId);
 
     if (analysis) {
-      await updatePosterCuration(poster.id, analysis, poster.year);
+      await updatePosterCuration(poster.id, analysis, poster.year, imageUrl);
       stats.analyzed++;
 
       if (analysis.party_detected && analysis.party_detected !== 'okant') {

@@ -28,7 +28,7 @@ export function PosterViewer({ imageServiceId, title, className = '' }: PosterVi
     // (https://react.dev/reference/react/useEffect#fetching-data).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setError(null);
 
     try {

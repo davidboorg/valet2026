@@ -85,9 +85,6 @@ export async function searchPoliticalPosters(options: Omit<SearchOptions, 'colle
  * Get a single poster by dark-ID
  */
 export async function getPosterById(darkId: string): Promise<KBPoster | null> {
-  // Search for the specific poster
-  const url = `${KB_SEARCH_API}?q=*&limit=1`;
-
   try {
     // First try to get it from the API directly
     const response = await fetch(`https://data.kb.se/${darkId}.jsonld`, {

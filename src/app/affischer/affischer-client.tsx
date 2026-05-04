@@ -18,7 +18,7 @@ interface AffischerClientProps {
 
 export function AffischerClient({
   posters,
-  totalPosters,
+  totalPosters: _totalPosters, // Used by parent for stats display
   currentPage,
   totalPages,
   activeFilters,

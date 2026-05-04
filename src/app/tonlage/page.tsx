@@ -42,10 +42,10 @@ export default async function TonlagePage() {
 
               {/* Datatag-rad */}
               <div className="data-tags mt-12">
-                <span>{postersWithTone} analyserade</span>
+                <span>{postersWithTone} kategoriserade</span>
                 <span>6 tonlägen</span>
                 <span>{decadesCount} årtionden</span>
-                <span>Claude Vision</span>
+                <span>Mönsteranalys + AI</span>
               </div>
             </div>
 
@@ -56,11 +56,12 @@ export default async function TonlagePage() {
         </div>
       </section>
 
-      {/* Disclaimer */}
-      <div className="bg-[var(--bg-secondary)] border-b border-[var(--border)]">
+      {/* Demo data disclaimer */}
+      <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
         <div className="max-w-[1200px] mx-auto px-6 lg:px-12 py-4">
-          <p className="caption text-center">
-            AI-analys i utvecklingsfas — vissa tonlägen är preliminära
+          <p className="text-sm text-amber-800 dark:text-amber-200 text-center">
+            <span className="font-medium">Demo-data:</span> Tonlägen baseras på mönsterbaserad kategorisering.
+            AI-analyserade affischer visas när de finns tillgängliga i databasen.
           </p>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getAllElectionPosters } from '@/lib/posters';
-import { SWEDISH_ELECTION_YEARS } from '@/lib/election-years';
+import { filterPosters, PARTIES as PARTY_DEFINITIONS, THEMES as THEME_DEFINITIONS, getUniqueYears } from '@/lib/filter-utils';
 import { AffischerClient } from './affischer-client';
 
 export const metadata: Metadata = {
@@ -9,27 +9,17 @@ export const metadata: Metadata = {
   description: 'Bläddra bland svenska politiska valaffischer från Kungliga bibliotekets samlingar.',
 };
 
-// Election years in KB's collection range (1892-1951)
-const ELECTION_YEARS = SWEDISH_ELECTION_YEARS.filter(y => y >= 1892 && y <= 1951).map(y => ({
-  value: String(y),
-  label: String(y),
+// Party filter options using centralized definitions
+const PARTIES = PARTY_DEFINITIONS.map(p => ({
+  value: p.slug,
+  label: p.name,
 }));
 
-const PARTIES = [
-  { value: 'socialdemokraterna', label: 'Socialdemokraterna', searchTerm: 'socialdemokrat OR SAP' },
-  { value: 'hogern', label: 'Högerpartiet', searchTerm: 'högerpartiet OR höger' },
-  { value: 'bondeforbundet', label: 'Bondeförbundet', searchTerm: 'bondeförbundet OR bonde' },
-  { value: 'liberalerna', label: 'Folkpartiet/Liberalerna', searchTerm: 'folkpartiet OR liberal' },
-  { value: 'kommunisterna', label: 'Kommunisterna', searchTerm: 'kommunist OR VPK' },
-];
-
-const THEMES = [
-  { value: 'rostratt', label: 'Rösträtt', searchTerm: 'rösträtt OR rösta' },
-  { value: 'arbete', label: 'Arbete', searchTerm: 'arbete OR arbetare' },
-  { value: 'fred', label: 'Fred', searchTerm: 'fred OR krig' },
-  { value: 'valfard', label: 'Välfärd', searchTerm: 'välfärd OR trygghet' },
-  { value: 'jordbruk', label: 'Jordbruk', searchTerm: 'jordbruk OR bonde OR lantbruk' },
-];
+// Theme filter options using centralized definitions
+const THEMES = THEME_DEFINITIONS.map(t => ({
+  value: t.slug,
+  label: t.name,
+}));
 
 interface PageProps {
   searchParams: Promise<{
@@ -47,49 +37,28 @@ export default async function AffischerPage({ searchParams }: PageProps) {
   const limit = 24;
   const offset = (page - 1) * limit;
 
-  // Build search query from filters
-  let searchQuery = params.q || '*';
+  // Parse filter parameters
   const yearFilter = params.year ? parseInt(params.year, 10) : undefined;
-
-  // Handle year filter (specific election year)
-  const fromYear = yearFilter;
-  const toYear = yearFilter;
-
-  // Handle party filter
-  const selectedParty = PARTIES.find((p) => p.value === params.parti);
-  if (selectedParty && searchQuery === '*') {
-    searchQuery = selectedParty.searchTerm;
-  } else if (selectedParty) {
-    searchQuery = `(${searchQuery}) AND (${selectedParty.searchTerm})`;
-  }
-
-  // Handle theme filter
-  const selectedTheme = THEMES.find((t) => t.value === params.tema);
-  if (selectedTheme && searchQuery === '*') {
-    searchQuery = selectedTheme.searchTerm;
-  } else if (selectedTheme) {
-    searchQuery = `(${searchQuery}) AND (${selectedTheme.searchTerm})`;
-  }
+  const partyFilter = params.parti || undefined;
+  const themeFilter = params.tema || undefined;
+  const queryFilter = params.q && params.q !== '*' ? params.q : undefined;
 
   // Get all election posters from all sources
-  let allElectionPosters = await getAllElectionPosters({ limit: 300, sort: '-year' });
+  const rawPosters = await getAllElectionPosters({ limit: 500, sort: '-year' });
 
-  // Apply year filter if specified
-  if (fromYear && toYear) {
-    allElectionPosters = allElectionPosters.filter(p => p.year && p.year >= fromYear && p.year <= toYear);
-  } else if (fromYear) {
-    allElectionPosters = allElectionPosters.filter(p => p.year && p.year === fromYear);
-  }
+  // Apply proper filtering using filter-utils
+  const allElectionPosters = filterPosters(rawPosters, {
+    query: queryFilter,
+    party: partyFilter,
+    year: yearFilter,
+    theme: themeFilter,
+  });
 
-  // Apply text search filter if specified
-  if (searchQuery !== '*') {
-    const query = searchQuery.toLowerCase();
-    allElectionPosters = allElectionPosters.filter(p =>
-      p.title.toLowerCase().includes(query) ||
-      p.creator?.toLowerCase().includes(query) ||
-      p.party?.toLowerCase().includes(query)
-    );
-  }
+  // Generate dynamic election years from actual data
+  const ELECTION_YEARS = getUniqueYears(rawPosters).map(y => ({
+    value: String(y),
+    label: String(y),
+  }));
 
   // Paginate the filtered results
   const posters = allElectionPosters.slice(offset, offset + limit);
@@ -117,19 +86,19 @@ export default async function AffischerPage({ searchParams }: PageProps) {
   };
 
   // Active filters for display
-  const activeFilters = [];
-  if (params.q && params.q !== '*') {
-    activeFilters.push({ type: 'q', label: params.q, clearUrl: buildFilterUrl({ q: '' }) });
+  const activeFilters: Array<{ type: string; label: string; clearUrl: string }> = [];
+  if (queryFilter) {
+    activeFilters.push({ type: 'q', label: queryFilter, clearUrl: buildFilterUrl({ q: '' }) });
   }
-  if (params.year) {
-    activeFilters.push({ type: 'year', label: `Valet ${params.year}`, clearUrl: buildFilterUrl({ year: '' }) });
+  if (yearFilter) {
+    activeFilters.push({ type: 'year', label: `Valet ${yearFilter}`, clearUrl: buildFilterUrl({ year: '' }) });
   }
-  if (params.parti) {
-    const partyLabel = PARTIES.find((p) => p.value === params.parti)?.label || params.parti;
+  if (partyFilter) {
+    const partyLabel = PARTIES.find((p) => p.value === partyFilter)?.label || partyFilter;
     activeFilters.push({ type: 'parti', label: partyLabel, clearUrl: buildFilterUrl({ parti: '' }) });
   }
-  if (params.tema) {
-    const themeLabel = THEMES.find((t) => t.value === params.tema)?.label || params.tema;
+  if (themeFilter) {
+    const themeLabel = THEMES.find((t) => t.value === themeFilter)?.label || themeFilter;
     activeFilters.push({ type: 'tema', label: themeLabel, clearUrl: buildFilterUrl({ tema: '' }) });
   }
 

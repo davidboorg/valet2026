@@ -68,7 +68,7 @@ export default async function OrdExplorerPage() {
                 <span>{stats.totalWords} unika ord</span>
                 <span>{stats.totalPosters} affischer</span>
                 <span>{stats.yearRange.max - stats.yearRange.min} år</span>
-                <span>Claude Vision</span>
+                <span>Textanalys + AI</span>
               </div>
             </div>
 
@@ -78,6 +78,16 @@ export default async function OrdExplorerPage() {
           </div>
         </div>
       </section>
+
+      {/* Demo data disclaimer */}
+      <div className="bg-amber-50 dark:bg-amber-900/20 border-b border-amber-200 dark:border-amber-800">
+        <div className="max-w-[1200px] mx-auto px-6 lg:px-12 py-4">
+          <p className="text-sm text-amber-800 dark:text-amber-200 text-center">
+            <span className="font-medium">Demo-data:</span> Ordanalys inkluderar mönsterbaserad kategorisering.
+            Fullständig AI-transkribering pågår.
+          </p>
+        </div>
+      </div>
 
       {/* Interactive word cloud */}
       <OrdExplorerClient
