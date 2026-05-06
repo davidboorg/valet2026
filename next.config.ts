@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  basePath: '/valet2026',
   images: {
     remotePatterns: [
       // Supabase Storage (vår primära bildkälla)
