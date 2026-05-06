@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import type { Poster } from '@/lib/types';
 import { resolvePosterImage, shouldSkipOptimization } from '@/lib/poster-image';
-import { LaunchModule } from './launch-module';
 import { MetadataTicker, MetadataStrip } from './metadata-ticker';
 import { FadeInSection } from './home-scroll-effects';
 
@@ -76,12 +75,23 @@ export function HomeClient({
             </motion.p>
 
             <motion.div
-              className="mt-12"
+              className="mt-12 flex flex-wrap justify-center gap-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <LaunchModule variant="hero" />
+              <Link
+                href="/affischer"
+                className="px-8 py-3 bg-[var(--text-primary)] text-[var(--bg-primary)] text-sm font-medium hover:opacity-80 transition-opacity"
+              >
+                Utforska samlingen
+              </Link>
+              <Link
+                href="/tidslinje"
+                className="px-8 py-3 border border-[var(--border-strong)] text-sm hover:opacity-70 transition-opacity"
+              >
+                Se tidslinjen
+              </Link>
             </motion.div>
           </div>
         </div>
@@ -295,10 +305,6 @@ export function HomeClient({
         </div>
       </section>
 
-      {/* ============================================================
-          07. LAUNCH MODULE — pre-launch signup
-          ============================================================ */}
-      <LaunchModule variant="section" />
 
       {/* ============================================================
           08. FINAL CTA — enkel, monumental
