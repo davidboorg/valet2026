@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { LaunchModule } from './launch-module';
 
 export function Footer() {
   return (
@@ -10,31 +11,33 @@ export function Footer() {
             <span>Kungliga biblioteket</span>
             <span>Wikimedia Commons</span>
             <span>Stockholmskällan</span>
-            <span>DigitaltMuseum</span>
-            <span>Affischerna 1967—1979</span>
-            <span>Partiarkiv</span>
+            <span>Partiarkiven</span>
           </div>
         </div>
       </div>
 
       <div className="max-w-[1440px] mx-auto px-6 lg:px-12 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          {/* Brand */}
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
+          {/* Brand + Newsletter */}
+          <div className="md:col-span-5">
             <Link href="/" className="inline-block hover:opacity-70 transition-opacity">
               <span className="text-xl font-medium tracking-tight">
                 Valaffischen
               </span>
             </Link>
-            <p className="mt-4 text-sm text-[rgba(255,255,255,0.5)] max-w-md leading-relaxed">
-              Ett digitalt arkiv över svenska valaffischer — från Kungliga bibliotekets
-              samlingar och andra källor. Demokratins visuella historia, tillgängliggjord
-              för forskning och bildning.
+            <p className="mt-4 text-sm text-[rgba(255,255,255,0.5)] max-w-sm leading-relaxed">
+              Ett digitalt museum över svensk politisk retorik.
+              Öppnar inför riksdagsvalet 2026.
             </p>
+
+            {/* Newsletter signup */}
+            <div className="mt-8">
+              <LaunchModule variant="footer" />
+            </div>
           </div>
 
-          {/* Navigation */}
-          <div>
+          {/* Navigation - Utforska */}
+          <div className="md:col-span-2 md:col-start-7">
             <p className="meta text-[rgba(255,255,255,0.4)] mb-4">
               Utforska
             </p>
@@ -45,14 +48,6 @@ export function Footer() {
                   className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
                 >
                   Samlingen
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/partier"
-                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
-                >
-                  Partier
                 </Link>
               </li>
               <li>
@@ -68,16 +63,41 @@ export function Footer() {
                   href="/om"
                   className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
                 >
-                  Om projektet
+                  Om
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Navigation - Analys */}
+          <div className="md:col-span-2">
+            <p className="meta text-[rgba(255,255,255,0.4)] mb-4">
+              Analys
+            </p>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <Link
+                  href="/ord"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
+                >
+                  Språket
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/tonlage"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
+                >
+                  Tonlägen
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* External + Rights */}
-          <div>
+          <div className="md:col-span-2">
             <p className="meta text-[rgba(255,255,255,0.4)] mb-4">
-              Källor
+              Resurser
             </p>
             <ul className="space-y-3 text-sm">
               <li>
@@ -98,40 +118,34 @@ export function Footer() {
                   href="/om/rattigheter"
                   className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
                 >
-                  Rättighetsinformation
+                  Rättigheter
                 </Link>
+              </li>
+              <li>
+                <a
+                  href="mailto:david@surpriseventures.io"
+                  className="text-[rgba(255,255,255,0.6)] hover:opacity-70 transition-opacity"
+                >
+                  Tipsa om affischer
+                </a>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Rights disclaimer - monokrom version */}
+        {/* Rights disclaimer */}
         <div className="mt-16 pt-8 border-t border-[rgba(255,255,255,0.1)]">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <p className="meta text-[rgba(255,255,255,0.4)] mb-3">
-                Bildmaterial
-              </p>
-              <p className="text-sm text-[rgba(255,255,255,0.5)] leading-relaxed">
-                Materialet är blandat licensierat. KB:s affischer 1892—1951 är Public Domain.
-                Modernare material visas med källhänvisning under citaträtt (URL §23).
-                Se varje affisch för specifik rättighetsstatus.
-              </p>
-              <Link
-                href="/om/rattigheter"
-                className="inline-flex items-center gap-1 mt-4 text-sm text-[rgba(255,255,255,0.7)] hover:opacity-70 transition-opacity border-b border-current pb-0.5"
-              >
-                Läs mer om rättigheter →
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <p className="text-xs text-[rgba(255,255,255,0.4)] leading-relaxed max-w-xl">
+              Bildmaterial från öppna arkiv. KB-affischer 1892–1951 är public domain.
+              Modernare material visas under citaträtt (URL §23).
+              {' '}<Link href="/om/rattigheter" className="border-b border-current hover:opacity-70 transition-opacity">
+                Läs mer →
               </Link>
-            </div>
-            <div className="md:text-right">
-              <p className="text-sm text-[rgba(255,255,255,0.4)]">
-                Ett projekt för bildning — utan kommersiellt eller partipolitiskt syfte
-              </p>
-              <p className="text-sm text-[rgba(255,255,255,0.4)] mt-2">
-                © {new Date().getFullYear()} Valaffischen
-              </p>
-            </div>
+            </p>
+            <p className="text-xs text-[rgba(255,255,255,0.4)]">
+              © {new Date().getFullYear()} Valaffischen · För bildning, inte reklam
+            </p>
           </div>
         </div>
       </div>

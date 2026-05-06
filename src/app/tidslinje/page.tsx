@@ -5,7 +5,8 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { VerticalTimeline } from '@/components/vertical-timeline';
 import type { Poster } from '@/lib/types';
 
-export const revalidate = 3600;
+// Force dynamic — KB API timeout vid Vercel build i USA
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Tidslinje — Valaffischen',

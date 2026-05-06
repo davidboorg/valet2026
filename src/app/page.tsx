@@ -2,7 +2,8 @@ import { getAllElectionPosters } from '@/lib/posters';
 import { HomeClient } from '@/components/home-client';
 import type { Poster } from '@/lib/types';
 
-export const revalidate = 3600;
+// Force dynamic — KB API timeout vid Vercel build i USA
+export const dynamic = 'force-dynamic';
 
 /**
  * Kuraterad sekvens av 8 ikoniska public-domain-affischer som driver hero.

@@ -54,18 +54,20 @@ const Icons = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/affischer', label: 'Samlingen', icon: Icons.collection },
   { href: '/tidslinje', label: 'Tidslinje', icon: Icons.timeline },
-  { href: '/ord', label: 'Ord-explorer', icon: Icons.words, isHighlighted: true },
-  { href: '/tonlage', label: 'Tonlägen', icon: Icons.tone, isHighlighted: true },
-  { href: '/partier', label: 'Partier', icon: Icons.parties },
-  { href: '/utstallningar', label: 'Utställningar', icon: Icons.exhibitions },
   { href: '/om', label: 'Om', icon: Icons.about },
+];
+
+// Analysis section items
+const ANALYSIS_ITEMS: NavItem[] = [
+  { href: '/ord', label: 'Språket', icon: Icons.words },
+  { href: '/tonlage', label: 'Tonlägen', icon: Icons.tone },
 ];
 
 // Quick access items for bottom bar
 const QUICK_ACCESS = [
   { href: '/affischer', label: 'Samling', icon: Icons.collection },
   { href: '/tidslinje', label: 'Tidslinje', icon: Icons.timeline },
-  { href: '/partier', label: 'Partier', icon: Icons.parties },
+  { href: '/ord', label: 'Analys', icon: Icons.tone },
 ];
 
 interface MobileNavProps {
@@ -118,7 +120,7 @@ export function MobileNav({ className = '' }: MobileNavProps) {
   }, []);
 
   return (
-    <div className={`sm:hidden ${className}`}>
+    <div className={`md:hidden ${className}`}>
       {/* Hamburger button */}
       <button
         type="button"
@@ -202,20 +204,52 @@ export function MobileNav({ className = '' }: MobileNavProps) {
                         className={`flex items-center gap-3 px-4 py-3 transition-opacity ${
                           isActive
                             ? 'border-l-2 border-[var(--border-strong)] text-[var(--text-primary)] font-medium bg-[var(--bg-secondary)]'
-                            : item.isHighlighted
-                              ? 'text-[var(--text-primary)] font-medium hover:opacity-70'
-                              : 'text-[var(--text-primary)] hover:opacity-70'
+                            : 'text-[var(--text-primary)] hover:opacity-70'
                         }`}
                       >
                         <span className={isActive ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}>
                           {item.icon}
                         </span>
                         {item.label}
-                        {item.isHighlighted && !isActive && (
-                          <span className="ml-auto text-xs border border-[var(--border-strong)] text-[var(--text-primary)] px-2 py-0.5">
-                            Ny
-                          </span>
-                        )}
+                      </Link>
+                    </motion.li>
+                  );
+                })}
+
+                {/* Analysis section */}
+                <motion.li
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: NAV_ITEMS.length * 0.05 }}
+                  className="pt-4 mt-4 border-t border-[var(--border)]"
+                >
+                  <span className="block px-4 py-2 text-xs font-medium tracking-wider uppercase text-[var(--text-secondary)]">
+                    Analys
+                  </span>
+                </motion.li>
+                {ANALYSIS_ITEMS.map((item, index) => {
+                  const isActive = pathname === item.href;
+
+                  return (
+                    <motion.li
+                      key={item.href}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (NAV_ITEMS.length + 1 + index) * 0.05 }}
+                    >
+                      <Link
+                        href={item.href}
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 transition-opacity ${
+                          isActive
+                            ? 'border-l-2 border-[var(--border-strong)] text-[var(--text-primary)] font-medium bg-[var(--bg-secondary)]'
+                            : 'text-[var(--text-primary)] hover:opacity-70'
+                        }`}
+                      >
+                        <span className={isActive ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}>
+                          {item.icon}
+                        </span>
+                        {item.label}
                       </Link>
                     </motion.li>
                   );
@@ -276,7 +310,7 @@ export function MobileBottomNav() {
   if (pathname === '/') return null;
 
   return (
-    <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg-primary)]/95 backdrop-blur-sm border-t border-[var(--border)] pb-safe">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--bg-primary)]/95 backdrop-blur-sm border-t border-[var(--border)] pb-safe">
       <div className="flex justify-around items-center h-16">
         {QUICK_ACCESS.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -297,15 +331,15 @@ export function MobileBottomNav() {
           );
         })}
         <Link
-          href="/utstallningar"
+          href="/om"
           className={`flex flex-col items-center gap-1 px-4 py-2 transition-opacity ${
-            pathname.startsWith('/utstallningar')
+            pathname === '/om'
               ? 'text-[var(--text-primary)]'
               : 'text-[var(--text-secondary)] hover:opacity-70'
           }`}
         >
-          {Icons.exhibitions}
-          <span className="text-xs">Mer</span>
+          {Icons.about}
+          <span className="text-xs">Om</span>
         </Link>
       </div>
     </nav>

@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   description: 'Utforska retoriska tonlägen i svenska valaffischer genom historien.',
 };
 
-export const revalidate = 3600; // Revalidate every hour
+// Force dynamic — KB API timeout vid Vercel build i USA
+export const dynamic = 'force-dynamic';
 
 export default async function TonlagePage() {
   // Fetch all posters

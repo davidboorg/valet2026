@@ -4,6 +4,9 @@ import { getAllElectionPosters } from '@/lib/posters';
 import { filterPosters, PARTIES as PARTY_DEFINITIONS, THEMES as THEME_DEFINITIONS, getUniqueYears } from '@/lib/filter-utils';
 import { AffischerClient } from './affischer-client';
 
+// Force dynamic — KB API timeout vid Vercel build i USA
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Samlingen — Valaffischen',
   description: 'Bläddra bland svenska politiska valaffischer från Kungliga bibliotekets samlingar.',
