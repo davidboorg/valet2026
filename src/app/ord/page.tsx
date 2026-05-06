@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   description: 'Utforska de vanligaste orden i svenska valaffischer genom historien. Se hur det politiska språket förändrats över 130 år.',
 };
 
-// Revalidate every hour
-export const revalidate = 3600;
+// Force dynamic rendering — KB API timeout vid Vercel build i USA
+export const dynamic = 'force-dynamic';
 
 export default async function OrdExplorerPage() {
   // Fetch all posters
